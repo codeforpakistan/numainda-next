@@ -1,0 +1,26 @@
+{
+  "name": "@numainda/mobile",
+  "version": "2.0.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .expo .turbo node_modules"
+  },
+  "dependencies": {
+    "@numainda/ui": "*",
+    "@numainda/shared": "*",
+    "expo": "~52.0.0",
+    "expo-router": "~4.0.0",
+    "react": "^18.2.0",
+    "react-native": "0.76.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.14",
+    "typescript": "~5.1.6"
+  }
+}

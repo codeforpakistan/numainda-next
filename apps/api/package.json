@@ -1,0 +1,28 @@
+{
+  "name": "@numainda/api",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .turbo node_modules"
+  },
+  "dependencies": {
+    "@numainda/database": "*",
+    "@numainda/shared": "*",
+    "@numainda/ai-agents": "*",
+    "@numainda/parliament-sdk": "*",
+    "fastify": "^4.28.0",
+    "@fastify/cors": "^8.5.0",
+    "@fastify/helmet": "^11.1.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.45",
+    "tsx": "^4.15.7",
+    "typescript": "~5.1.6"
+  }
+}

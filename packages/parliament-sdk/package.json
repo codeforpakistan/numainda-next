@@ -1,0 +1,26 @@
+{
+  "name": "@numainda/parliament-sdk",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@numainda/database": "*",
+    "@numainda/shared": "*",
+    "zod": "^3.23.8",
+    "cheerio": "^1.0.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^17.0.45",
+    "jest": "^29.7.0",
+    "typescript": "~5.1.6"
+  }
+}
