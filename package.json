@@ -20,7 +20,9 @@
     "db:studio": "drizzle-kit studio",
     "db:check": "drizzle-kit check",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "ingest": "tsx scripts/ingest-pdf.ts",
+    "ingest:batch": "tsx scripts/batch-ingest.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.0.4",
