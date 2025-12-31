@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle, Plus, X, Trash2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
-import { PehchanLoginButton } from "@/components/pehchan-button";
 import { useRouter } from 'next/navigation'
 
 interface MessageThreadsSidebarProps {
@@ -135,7 +134,7 @@ export function MessageThreadsSidebar({ isOpen, onClose }: MessageThreadsSidebar
                   <Plus className="mr-2 size-4" />
                   New Chat
                 </Button>
-                
+
                 {threads.map((thread) => (
                   <Button
                     key={thread.id}
@@ -174,7 +173,9 @@ export function MessageThreadsSidebar({ isOpen, onClose }: MessageThreadsSidebar
             </>
           ) : (
             <div className="flex flex-1 items-center justify-center p-4">
-              <PehchanLoginButton />
+              <div className="text-center text-sm text-muted-foreground">
+                Please log in to view your chat history
+              </div>
             </div>
           )}
         </div>

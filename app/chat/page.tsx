@@ -5,7 +5,6 @@ import { useChat } from "ai/react"
 import {
   Bot,
   CopyIcon,
-  Menu,
   MessageSquare,
   RefreshCcw,
   SendIcon,
@@ -26,8 +25,6 @@ import {
   ChatBubbleMessage,
 } from "@/components/ui/chat/chat-bubble"
 import { ChatInput } from "@/components/ui/chat/chat-input"
-import { MessageThreadsSidebar } from "@/app/components/message-threads-sidebar"
-import { PehchanLoginButton } from "@/components/pehchan-button"
 
 const ChatAiIcons = [
   { icon: CopyIcon, label: "Copy" },
@@ -36,7 +33,6 @@ const ChatAiIcons = [
 
 function ChatPageContent() {
   const [isGenerating, setIsGenerating] = useState(false)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
@@ -172,29 +168,14 @@ function ChatPageContent() {
   }
 
   return (
-    <div className="flex w-full touch-manipulation flex-col overflow-hidden lg:flex-row">
-      <MessageThreadsSidebar
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
-
+    <div className="flex w-full touch-manipulation flex-col overflow-hidden">
       <div className="flex min-h-0 flex-1 flex-col">
         {/* Header */}
         <div className="sticky top-0 z-10 flex h-14 flex-none items-center justify-between border-b bg-background px-4">
           <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsSidebarOpen(true)}
-              className="mr-2 lg:hidden"
-            >
-              <Menu className="size-5" />
-            </Button>
             <MessageSquare className="mr-2 size-5" />
             <span className="font-semibold">Numainda Chat</span>
           </div>
-          
-  
         </div>
 
         {/* Messages container */}
