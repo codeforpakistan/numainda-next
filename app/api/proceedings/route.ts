@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { bills } from '@/lib/db/schema/bills';
-import { desc, or, ilike, count } from 'drizzle-orm';
+import { parliamentaryProceedings } from '@/lib/db/schema/parliamentary-proceedings';
+import { desc, ilike, count } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic'; // Disable caching for this route
 
@@ -15,32 +15,33 @@ export async function GET(request: Request) {
 
     // Build search condition
     const searchCondition = search
-      ? or(
-          ilike(bills.title, `%${search}%`),
-          ilike(bills.billNumber, `%${search}%`),
-          ilike(bills.status, `%${search}%`)
-        )
+      ? ilike(parliamentaryProceedings.title, `%${search}%`)
       : undefined;
 
-    // Fetch paginated bills
-    const allBills = await db
-      .select()
-      .from(bills)
+    // Fetch paginated proceedings
+    const proceedings = await db
+      .select({
+        id: parliamentaryProceedings.id,
+        title: parliamentaryProceedings.title,
+        date: parliamentaryProceedings.date,
+        createdAt: parliamentaryProceedings.createdAt,
+      })
+      .from(parliamentaryProceedings)
       .where(searchCondition)
-      .orderBy(desc(bills.createdAt))
+      .orderBy(desc(parliamentaryProceedings.date))
       .limit(limit)
       .offset(offset);
 
     // Get total count for pagination
     const [{ value: totalCount }] = await db
       .select({ value: count() })
-      .from(bills)
+      .from(parliamentaryProceedings)
       .where(searchCondition);
 
     const totalPages = Math.ceil(totalCount / limit);
 
     return NextResponse.json({
-      data: allBills,
+      data: proceedings,
       pagination: {
         page,
         limit,
@@ -49,7 +50,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    console.error('Failed to fetch bills:', error);
-    return NextResponse.json({ error: 'Failed to fetch bills' }, { status: 500 });
+    console.error('Failed to fetch proceedings:', error);
+    return NextResponse.json({ error: 'Failed to fetch proceedings' }, { status: 500 });
   }
-} 
+}
