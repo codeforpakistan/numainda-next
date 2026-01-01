@@ -22,7 +22,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "ingest": "tsx scripts/ingest-pdf.ts",
-    "ingest:batch": "tsx scripts/batch-ingest.ts"
+    "ingest:batch": "tsx scripts/batch-ingest.ts",
+    "fix-titles": "tsx scripts/fix-document-titles.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.0.4",

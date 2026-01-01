@@ -142,7 +142,7 @@ Technology stack:
 **Layout** (`app/layout.tsx`):
 - Theme provider (dark mode via next-themes)
 - Site header with navigation (site-header.tsx)
-- Footer, toast notifications, Vercel Analytics
+- Footer, toast notifications, Vercel Analytics, Google Analytics
 
 **Navigation** (`config/site.ts`): Home, Chat, About, Proceedings, Acts, Constitution
 
@@ -173,6 +173,8 @@ Technology stack:
 - `pehchan-button.tsx` - OAuth login button
 - `site-header.tsx` - Navigation header
 - `message-threads-sidebar.tsx` - Chat history sidebar
+- `google-analytics.tsx` - GA4 script loader
+- `*-view-tracker.tsx` - Analytics tracking wrappers for server components
 - `footer.tsx`, `theme-provider.tsx`
 
 ## Development Guidelines
@@ -285,6 +287,72 @@ CREATE INDEX ON embeddings USING hnsw (embedding vector_cosine_ops);
 ### Auth Token Expiry
 Pehchan tokens expire. If users report auth issues, they need to re-login. Implement token refresh if needed.
 
+## Analytics & Monitoring
+
+### Google Analytics (GA4)
+
+**Tracking ID**: `G-QMPHXVV7TX`
+
+**Implementation** (`components/google-analytics.tsx`, `lib/analytics.ts`):
+- Next.js Script component with `afterInteractive` strategy for optimized loading
+- Comprehensive event tracking across all user interactions
+- Client-side wrappers for server components to track page views
+
+**Key Metrics Tracked**:
+
+1. **User Engagement**
+   - Page views (automatic)
+   - Session duration
+   - Active users
+
+2. **Chat Interactions**
+   - `trackChatMessage(threadId?)` - Message sending
+   - `trackNewChatThread()` - New conversation creation
+
+3. **Authentication**
+   - `trackPehchanLogin(success: boolean)` - Login attempts
+
+4. **Document Views**
+   - `trackBillView(billId)` - Bill detail views
+   - `trackProceedingView(proceedingId)` - Proceeding views
+   - `trackConstitutionView()` - Constitution page views
+   - `trackDocumentView(type, id)` - Generic document tracking
+
+5. **Admin Actions**
+   - `trackDocumentUpload(documentType)` - Document uploads
+
+6. **Search & RAG**
+   - `trackSearch(query, resultCount)` - Search queries
+   - `trackRAGQuery(relevantChunks)` - RAG retrieval performance
+
+**Tracking Components**:
+- `components/bill-view-tracker.tsx` - Bill view tracking wrapper
+- `components/proceeding-view-tracker.tsx` - Proceeding view wrapper
+- `components/constitution-view-tracker.tsx` - Constitution view wrapper
+
+These client components wrap server components to trigger GA events on mount.
+
+**Adding New Tracking Events**:
+
+1. Add function to `lib/analytics.ts`:
+   ```typescript
+   export const trackCustomEvent = (label?: string) => {
+     trackEvent("event_name", "Category", label)
+   }
+   ```
+
+2. Import and use in components:
+   ```typescript
+   import { trackCustomEvent } from "@/lib/analytics"
+
+   // In your component
+   trackCustomEvent("context")
+   ```
+
+**View Analytics**: https://analytics.google.com (Property: G-QMPHXVV7TX)
+
+**Documentation**: See `docs/google-analytics-integration.md` for comprehensive setup details, metric recommendations, and troubleshooting.
+
 ## External Services
 
 - **Pehchan**: Pakistan's national digital identity (OAuth provider)
@@ -292,6 +360,7 @@ Pehchan tokens expire. If users report auth issues, they need to re-login. Imple
 - **AWS S3**: Document storage
 - **Upstash QStash**: Background job queue
 - **Vercel**: Hosting and analytics
+- **Google Analytics**: User behavior and engagement tracking (GA4)
 
 ## Related Services
 
