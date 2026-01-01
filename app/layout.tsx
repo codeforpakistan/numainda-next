@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Footer } from "@/components/footer"
 import { Toaster } from "@/components/ui/toaster"
 import { Analytics } from "@vercel/analytics/react"
+import { GoogleAnalytics } from "@/components/google-analytics"
 
 export const metadata: Metadata = {
   title: {
@@ -36,7 +37,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <>
       <html lang="en" suppressHydrationWarning>
-        <head />
+        <head>
+          <GoogleAnalytics />
+        </head>
         <body
           className={cn(
             "min-h-screen bg-background font-sans antialiased",

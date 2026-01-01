@@ -1,9 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { 
-  Book, 
-  Scale, 
-  Landmark, 
-  Building2, 
+import {
+  Book,
+  Scale,
+  Landmark,
+  Building2,
   Hand,
   Wallet,
   Gavel,
@@ -13,6 +13,7 @@ import {
   FileSignature,
   Files
 } from "lucide-react"
+import { ConstitutionViewTracker } from "@/components/constitution-view-tracker"
 
 type SectionId = 'preamble' | 'introductory' | 'fundamental-rights' | 'federation' | 
   'provinces' | 'federation-provinces' | 'finance' | 'judiciary' | 'elections' | 
@@ -37,6 +38,7 @@ export default async function ConstitutionPage() {
 
   return (
     <div className="container py-8 space-y-8">
+      <ConstitutionViewTracker />
       {/* Hero Section */}
       <div className="text-center space-y-4">
         <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
