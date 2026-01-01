@@ -3,6 +3,7 @@ import { bills } from '@/lib/db/schema/bills';
 import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown'
+import { BillViewTracker } from '@/components/bill-view-tracker'
 
 export default async function BillPage({ params }: { params: { id: string } }) {
   const [bill] = await db
@@ -16,6 +17,7 @@ export default async function BillPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="container mx-auto py-8">
+      <BillViewTracker billId={bill.id} />
       <div className="mx-auto max-w-3xl">
         <h1 className="mb-6 text-3xl font-bold">{bill.title}</h1>
         <div className="grid grid-cols-2 gap-4 mb-6">

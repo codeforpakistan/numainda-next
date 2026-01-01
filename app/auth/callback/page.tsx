@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/hooks/use-toast'
+import { trackPehchanLogin } from '@/lib/analytics'
 
 export default function AuthCallback() {
   const router = useRouter()
@@ -59,6 +60,7 @@ export default function AuthCallback() {
             description: "Welcome to Numainda"
           })
 
+          trackPehchanLogin(true)
           router.push('/chat')
           return
         }
@@ -71,6 +73,7 @@ export default function AuthCallback() {
 
       } catch (error) {
         console.error('Auth callback error:', error)
+        trackPehchanLogin(false)
         toast({
           variant: "destructive",
           title: "Authentication Failed",

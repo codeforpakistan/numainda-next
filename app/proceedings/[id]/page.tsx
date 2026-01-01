@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import { ArrowLeft } from 'lucide-react'
+import { ProceedingViewTracker } from '@/components/proceeding-view-tracker'
 
 export default async function ProceedingPage({
   params: { id }
@@ -19,6 +20,7 @@ export default async function ProceedingPage({
 
   return (
     <div className="container mx-auto py-8">
+      <ProceedingViewTracker proceedingId={proceeding.id} />
       <div className="mx-auto max-w-3xl">
         <Link href="/proceedings" className="mb-6 flex items-center gap-2">
           <ArrowLeft className="size-4" />

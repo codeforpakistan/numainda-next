@@ -16,6 +16,7 @@ import Markdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
+import { trackChatMessage, trackNewChatThread } from "@/lib/analytics"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -85,6 +86,7 @@ function ChatPageContent() {
 
         if (thread) {
           setThreadId(thread.id)
+          trackNewChatThread()
           router.push(`/chat?thread=${thread.id}`)
         }
       }
@@ -250,6 +252,7 @@ function ChatPageContent() {
                 e.preventDefault()
                 if (!input?.trim() || isLoading) return
                 setIsGenerating(true)
+                trackChatMessage(threadId || undefined)
                 handleSubmit(e)
               }}
             >
@@ -264,6 +267,7 @@ function ChatPageContent() {
                     e.preventDefault()
                     if (!input?.trim() || isLoading) return
                     setIsGenerating(true)
+                    trackChatMessage(threadId || undefined)
                     handleSubmit(e)
                   }
                 }}

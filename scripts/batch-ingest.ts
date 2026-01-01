@@ -371,12 +371,14 @@ Arguments:
   directory                   Directory containing PDFs (default: ./docs)
   --type <string>            Document type (default: bill)
   --status <string>          Bill status (default: passed)
+  --limit <number>           Process only first N files
   --skip-existing            Skip files already in database
   --dry-run                  Preview without processing
 
 Examples:
   tsx scripts/batch-ingest.ts
   tsx scripts/batch-ingest.ts ./docs --skip-existing
+  tsx scripts/batch-ingest.ts ./my-bills --limit 100
   tsx scripts/batch-ingest.ts ./my-bills --type bill --status pending
 `);
     process.exit(0);
@@ -387,6 +389,7 @@ Examples:
     type: 'bill',
     status: 'passed',
     date: null,
+    limit: null,
     skipExisting: false,
     dryRun: false,
   };
@@ -407,6 +410,9 @@ Examples:
     } else if (args[i] === '--date') {
       options.date = args[i + 1];
       i++;
+    } else if (args[i] === '--limit') {
+      options.limit = parseInt(args[i + 1], 10);
+      i++;
     } else if (args[i] === '--skip-existing') {
       options.skipExisting = true;
     } else if (args[i] === '--dry-run') {
@@ -422,14 +428,23 @@ async function main() {
   console.log('\n🚀 Batch PDF Ingestion\n');
 
   const options = parseArgs();
-  const pdfFiles = getPDFFiles(options.directory);
+  let pdfFiles = getPDFFiles(options.directory);
 
   if (pdfFiles.length === 0) {
     console.log(`❌ No PDF files found in: ${options.directory}`);
     process.exit(1);
   }
 
-  console.log(`📂 Found ${pdfFiles.length} PDF file(s) in: ${options.directory}`);
+  const totalFiles = pdfFiles.length;
+
+  // Apply limit if specified
+  if (options.limit && options.limit > 0) {
+    pdfFiles = pdfFiles.slice(0, options.limit);
+    console.log(`📂 Found ${totalFiles} PDF file(s), processing first ${pdfFiles.length}`);
+  } else {
+    console.log(`📂 Found ${pdfFiles.length} PDF file(s) in: ${options.directory}`);
+  }
+
   console.log(`📋 Type: ${options.type} | Status: ${options.status}\n`);
 
   if (options.dryRun) {
