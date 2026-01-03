@@ -36,6 +36,13 @@
       "when": 1745918797129,
       "tag": "0004_harsh_jocasta",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1767267854498,
+      "tag": "0005_brown_mojo",
+      "breakpoints": true
     }
   ]
 }

@@ -11,6 +11,7 @@ import { Footer } from "@/components/footer"
 import { Toaster } from "@/components/ui/toaster"
 import { Analytics } from "@vercel/analytics/react"
 import { GoogleAnalytics } from "@/components/google-analytics"
+import { FloatingChatBubble } from "@/components/floating-chat-bubble"
 
 export const metadata: Metadata = {
   title: {
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
               <div className="flex flex-1 overflow-y-auto">{children}</div>
               <Footer />
               <Toaster />
+              <FloatingChatBubble />
             </div>
             <TailwindIndicator />
           </ThemeProvider>

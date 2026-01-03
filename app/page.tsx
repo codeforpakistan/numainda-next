@@ -1,106 +1,125 @@
 import Link from "next/link"
-import { siteConfig } from "@/config/site"
-import { buttonVariants } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Book, LucideBook, LandmarkIcon, MessageSquare, Info, ScaleIcon } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Users, FileText, BookOpen, Calendar } from 'lucide-react'
+import { RepresentativeSearch } from "@/components/representative-search"
 
 export default function IndexPage() {
   return (
-    <section className="container grid items-center gap-6 pb-8 pt-6 md:py-10">
-      <div className="relative mb-8 h-[400px] overflow-hidden rounded-lg sm:h-[300px]">
-        <div className="absolute inset-0">
-          <img
-            src="SC-b6-1.jpg"
-            alt="Supreme Court of Pakistan"
-            className="size-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/50 to-background/90" />
-        </div>
-        <div className="relative z-10 flex h-full max-w-[980px] flex-col justify-center p-4 sm:p-6">
-          <h1 className="text-2xl font-extrabold leading-tight tracking-tighter sm:text-3xl md:text-4xl">
-            Welcome to Numainda <br className="hidden sm:inline" />
-            Your Guide to Pakistan&apos;s Constitution and Laws
-          </h1>
-          <p className="mt-4 max-w-[700px] text-base text-muted-foreground sm:text-lg">
-            Explore Pakistan&apos;s rich legal and parliamentary heritage with our AI-powered chatbot. 
-            Gain insights into the constitution, election laws, and parliamentary bulletins.
-          </p>
+    <div className="relative flex w-full flex-col">
+      {/* Simple Hero Section */}
+      <div className="border-b bg-muted/30 py-8 md:py-12">
+        <div className="container max-w-6xl px-4">
+          <div className="mx-auto max-w-4xl space-y-6">
+            <div className="text-center">
+              <h1 className="text-3xl font-bold md:text-4xl lg:text-5xl">
+                Find your representative
+              </h1>
+            </div>
+
+            {/* Search Box */}
+            <div className="rounded-lg border bg-card p-4 shadow-md md:p-6">
+              <RepresentativeSearch />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 sm:flex-row">
-        <Link
-          href="/chat"
-          className={buttonVariants({ 
-            variant: "default",
-            size: "lg",
-            className: "w-full sm:w-auto"
-          })}
-        >
-          <MessageSquare className="mr-2 size-6" />
-          Start Chatting
+      <div className="container max-w-7xl flex flex-col gap-8 px-4 py-8 md:gap-10 md:py-12">
+
+      {/* Quick Access Navigation */}
+      <div className="grid w-full gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <Link href="/representatives">
+          <Card className="transition-shadow hover:shadow-md cursor-pointer h-full">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2">
+                  <Users className="size-5 text-primary" />
+                </div>
+                <CardTitle className="text-base">Representatives</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Browse all 332 MNAs
+              </p>
+            </CardContent>
+          </Card>
         </Link>
-        <Link
-          href="/about"
-          className={buttonVariants({ 
-            variant: "outline",
-            size: "lg",
-            className: "w-full sm:w-auto"
-          })}
-        >
-          <Info className="mr-2 size-6" />
-          Learn More
+
+        <Link href="/bills">
+          <Card className="transition-shadow hover:shadow-md cursor-pointer h-full">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2">
+                  <FileText className="size-5 text-primary" />
+                </div>
+                <CardTitle className="text-base">Bills & Acts</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Legislative documents
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/constitution">
+          <Card className="transition-shadow hover:shadow-md cursor-pointer h-full">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2">
+                  <BookOpen className="size-5 text-primary" />
+                </div>
+                <CardTitle className="text-base">Constitution</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Read the constitution
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/proceedings">
+          <Card className="transition-shadow hover:shadow-md cursor-pointer h-full">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2">
+                  <Calendar className="size-5 text-primary" />
+                </div>
+                <CardTitle className="text-base">Proceedings</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Parliamentary sessions
+              </p>
+            </CardContent>
+          </Card>
         </Link>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Book className="mr-2 size-5" />
-              Explore the Constitution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>Dive into the heart of Pakistan&apos;s legal framework. Understand the amendments and their impact on our society.</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <ScaleIcon className="mr-2 size-5" />
-              Election Laws Demystified
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>Get clarity on election processes, voter rights, and the mechanisms that drive our democracy.</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <LandmarkIcon className="mr-2 size-5" />
-              Parliamentary Insights
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>Stay updated with the latest parliamentary bulletins and understand how laws are made and amended.</p>
-          </CardContent>
-        </Card>
+      {/* Stats Bar */}
+      <div className="w-full rounded-xl border bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 p-8 md:p-10">
+        <div className="grid gap-8 sm:grid-cols-3">
+          <div className="text-center">
+            <div className="text-4xl font-bold text-primary md:text-5xl">332</div>
+            <div className="mt-2 text-base font-medium text-muted-foreground">Representatives</div>
+          </div>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-primary md:text-5xl">280+</div>
+            <div className="mt-2 text-base font-medium text-muted-foreground">Articles</div>
+          </div>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-primary md:text-5xl">26</div>
+            <div className="mt-2 text-base font-medium text-muted-foreground">Amendments</div>
+          </div>
+        </div>
       </div>
-
-      <div className="mt-8">
-        <h2 className="mb-4 flex items-center text-2xl font-bold">
-          <Info className="mr-2 size-6" />
-          Why We Built Numainda
-        </h2>
-        <p className="text-muted-foreground">
-          Inspired by generations of constitutional presence and the need for accessible legal knowledge, 
-          Numainda bridges the gap between citizens and the laws that govern them. We believe that an 
-          informed citizenry is the cornerstone of a thriving democracy.
-        </p>
       </div>
-    </section>
+    </div>
   )
 }
 
