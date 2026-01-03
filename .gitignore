@@ -36,3 +36,8 @@ yarn-error.log*
 .env
 
 docs/
+data/
+.playwright-mcp/
+
+# Representative images (generated from data/)
+public/representatives/

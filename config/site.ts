@@ -10,8 +10,8 @@ export const siteConfig = {
       href: "/",
     },
     {
-      title: "Chat",
-      href: "/chat",
+      title: "Representatives",
+      href: "/representatives",
     },
     {
       title: "About",
