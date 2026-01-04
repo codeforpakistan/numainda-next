@@ -57,8 +57,9 @@ export default function AboutPage() {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              Now an interactive platform where citizens learn about their constitution 
-              and rights through natural conversations in simple language.
+              Now a comprehensive platform connecting citizens with their representatives,
+              constitutional knowledge, and legislative information through AI-powered search
+              and natural conversations.
             </p>
           </CardContent>
         </Card>
@@ -96,40 +97,76 @@ export default function AboutPage() {
         </CardContent>
       </Card>
 
-      {/* Impact Stats */}
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center">24/7</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-muted-foreground">
-              Constitutional guidance available round the clock
-            </p>
-          </CardContent>
-        </Card>
+      {/* Key Features */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold">What Makes Numainda Unique</h2>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center">332 Representatives</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center text-muted-foreground">
+                Complete database of National Assembly members with contact information and constituencies
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center">Simple Language</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-muted-foreground">
-              Complex legal concepts explained in everyday terms
-            </p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center">Location Search</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center text-muted-foreground">
+                Find your representative using your device location or search by constituency
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center">Bilingual</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-muted-foreground">
-              Support in both English and Urdu
-            </p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center">AI-Powered Chat</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center text-muted-foreground">
+                Ask questions about constitution, laws, and representatives in natural language
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center">24/7 Available</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center text-muted-foreground">
+                Constitutional and legislative guidance available round the clock
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center">Semantic Search</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center text-muted-foreground">
+                Smart search understands context and finds relevant information across multiple sources
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center">Simple Language</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center text-muted-foreground">
+                Complex legal concepts and parliamentary processes explained in everyday terms
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )
