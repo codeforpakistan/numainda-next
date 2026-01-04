@@ -38,6 +38,3 @@ yarn-error.log*
 docs/
 data/
 .playwright-mcp/
-
-# Representative images (generated from data/)
-public/representatives/
