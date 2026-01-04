@@ -98,7 +98,7 @@ export function FloatingChatBubble() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 right-4 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 md:bottom-6 md:right-6 md:size-16"
+          className="fixed bottom-4 right-4 z-50 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 md:bottom-6 md:right-6 md:size-16"
           aria-label="Open chat"
         >
           <MessageSquare className="size-6 md:size-7" />
@@ -107,30 +107,32 @@ export function FloatingChatBubble() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-4 right-4 z-40 flex w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-lg border bg-background shadow-2xl md:bottom-6 md:right-6 md:h-[600px] md:w-[400px] h-[calc(100vh-2rem)]">
+        <div className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-background md:inset-auto md:bottom-6 md:right-6 md:h-[600px] md:w-[400px] md:rounded-lg md:border md:shadow-2xl">
           {/* Header */}
           <div className="flex h-14 flex-none items-center justify-between border-b bg-primary px-4 text-primary-foreground">
             <div className="flex items-center gap-2">
               <MessageSquare className="size-5" />
               <span className="font-semibold">Numainda</span>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-8 text-primary-foreground hover:bg-primary-foreground/20"
+                className="size-9 text-primary-foreground hover:bg-white/20"
                 onClick={handleClearChat}
                 title="Clear chat"
+                aria-label="Clear chat"
               >
-                <Minimize2 className="size-4" />
+                <Minimize2 className="size-5" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-8 text-primary-foreground hover:bg-primary-foreground/20"
+                className="size-9 text-primary-foreground hover:bg-white/20"
                 onClick={() => setIsOpen(false)}
+                aria-label="Close chat"
               >
-                <X className="size-4" />
+                <X className="size-5" />
               </Button>
             </div>
           </div>
@@ -138,7 +140,7 @@ export function FloatingChatBubble() {
           {/* Messages */}
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
             <div className="flex flex-col gap-4">
-              {messages.map((message) => (
+              {messages.map((message: any) => (
                 <ChatBubble
                   key={message.id}
                   variant={message.role === "user" ? "sent" : "received"}
