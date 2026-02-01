@@ -366,10 +366,11 @@ export default function RepresentativesPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold leading-tight">{rep.nameClean}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {rep.constituencyCode}
-                      {rep.constituencyName && ` - ${rep.constituencyName}`}
-                    </p>
+                    {rep.constituencyName && (
+                      <p className="text-sm text-muted-foreground">
+                        {rep.constituencyName}
+                      </p>
+                    )}
                     <div className="mt-2 flex flex-wrap gap-1">
                       <Badge variant="secondary">{rep.party}</Badge>
                       {rep.province && <Badge variant="outline">{rep.province}</Badge>}

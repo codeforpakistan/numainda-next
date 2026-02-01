@@ -103,7 +103,10 @@ export default function BillsPage() {
       {loading && (
         <div className="grid gap-4">
           {[...Array(3)].map((_, index) => (
-            <Skeleton key={index} className="h-24 w-full rounded-lg" />
+            <div key={index} className="p-6 rounded-lg border bg-card shadow-sm">
+              <Skeleton className="mb-2 h-6 w-3/4" />
+              <Skeleton className="h-5 w-16 rounded-full" />
+            </div>
           ))}
         </div>
       )}

@@ -25,6 +25,7 @@
     "ingest:batch": "tsx scripts/batch-ingest.ts",
     "fix-titles": "tsx scripts/fix-document-titles.ts",
     "scrape:representatives": "tsx scripts/scrape-representatives.ts",
+    "scrape:orders": "tsx scripts/scrape-orders-of-the-day.ts",
     "download:high-res-images": "tsx scripts/download-high-res-images.ts",
     "import:representatives": "tsx scripts/import-representatives.ts",
     "generate:embeddings": "tsx scripts/generate-representative-embeddings.ts",

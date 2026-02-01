@@ -94,7 +94,12 @@ export default function ProceedingsPage() {
       {loading && (
         <div className="space-y-4">
           {[...Array(3)].map((_, index) => (
-            <Skeleton key={index} className="h-16 w-full rounded-lg" />
+            <div key={index} className="rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-6 w-2/3" />
+                <Skeleton className="h-5 w-32" />
+              </div>
+            </div>
           ))}
         </div>
       )}

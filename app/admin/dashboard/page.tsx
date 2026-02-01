@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from 'date-fns';
 
 type UploadStatus = 'pending' | 'processing' | 'completed' | 'failed';
@@ -30,6 +31,7 @@ interface DocumentUpload {
 
 export default function DashboardPage() {
   const [uploads, setUploads] = useState<DocumentUpload[]>([]);
+  const [loading, setLoading] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -58,11 +60,14 @@ export default function DashboardPage() {
 
   const fetchUploads = async () => {
     try {
+      setLoading(true);
       const response = await fetch('/api/admin/uploads');
       const data = await response.json();
       setUploads(data);
     } catch (error) {
       console.error('Failed to fetch uploads:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -141,25 +146,39 @@ export default function DashboardPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {uploads.map((upload) => (
-              <TableRow key={upload.id}>
-                <TableCell className="font-medium">{upload.originalFileName}</TableCell>
-                <TableCell>{getStatusBadge(upload.status)}</TableCell>
-                <TableCell>{formatFileSize(upload.fileSize)}</TableCell>
-                <TableCell>
-                  <Progress value={upload.uploadProgress} className="w-[100px]" />
-                </TableCell>
-                <TableCell>
-                  <Progress value={upload.processingProgress} className="w-[100px]" />
-                </TableCell>
-                <TableCell>
-                  {formatDistanceToNow(new Date(upload.createdAt), { addSuffix: true })}
-                </TableCell>
-                <TableCell className="text-red-500">
-                  {upload.error || '-'}
-                </TableCell>
-              </TableRow>
-            ))}
+            {loading ? (
+              [...Array(5)].map((_, index) => (
+                <TableRow key={index}>
+                  <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-3 w-[100px]" /></TableCell>
+                  <TableCell><Skeleton className="h-3 w-[100px]" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                </TableRow>
+              ))
+            ) : (
+              uploads.map((upload) => (
+                <TableRow key={upload.id}>
+                  <TableCell className="font-medium">{upload.originalFileName}</TableCell>
+                  <TableCell>{getStatusBadge(upload.status)}</TableCell>
+                  <TableCell>{formatFileSize(upload.fileSize)}</TableCell>
+                  <TableCell>
+                    <Progress value={upload.uploadProgress} className="w-[100px]" />
+                  </TableCell>
+                  <TableCell>
+                    <Progress value={upload.processingProgress} className="w-[100px]" />
+                  </TableCell>
+                  <TableCell>
+                    {formatDistanceToNow(new Date(upload.createdAt), { addSuffix: true })}
+                  </TableCell>
+                  <TableCell className="text-red-500">
+                    {upload.error || '-'}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

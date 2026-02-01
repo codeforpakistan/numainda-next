@@ -190,14 +190,14 @@ export default function RepresentativeDetailPage({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Constituency</p>
-                <p className="text-base">
-                  {representative.constituencyCode}
-                  {representative.constituencyName &&
-                    ` - ${representative.constituencyName}`}
-                </p>
-              </div>
+              {representative.constituencyName && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Constituency</p>
+                  <p className="text-base">
+                    {representative.constituencyName}
+                  </p>
+                </div>
+              )}
               {representative.district && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">District</p>
