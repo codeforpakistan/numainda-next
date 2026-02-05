@@ -5,37 +5,47 @@ import { Icons } from "@/components/icons"
 
 export function PehchanLoginButton() {
   const handleLogin = () => {
-    // Construct the login URL with required parameters
-    const loginUrl = new URL(`${process.env.NEXT_PUBLIC_PEHCHAN_URL}/login`)
-    
-    // Add required parameters
-    const params = {
-      service_name: 'Numainda',
-      client_id: process.env.NEXT_PUBLIC_CLIENT_ID!,
-      redirect_uri: `${window.location.origin}/auth/callback`,
-      response_type: 'code',
-      scope: 'openid profile email',
+    try {
+      // Check for required environment variables
+      if (!process.env.NEXT_PUBLIC_PEHCHAN_URL || !process.env.NEXT_PUBLIC_CLIENT_ID) {
+        console.error('Missing required environment variables: NEXT_PUBLIC_PEHCHAN_URL or NEXT_PUBLIC_CLIENT_ID')
+        return
+      }
+
+      // Construct the login URL with required parameters
+      const loginUrl = new URL(`${process.env.NEXT_PUBLIC_PEHCHAN_URL}/login`)
+      
+      // Add required parameters
+      const params = {
+        service_name: 'Numainda',
+        client_id: process.env.NEXT_PUBLIC_CLIENT_ID!,
+        redirect_uri: `${window.location.origin}/auth/callback`,
+        response_type: 'code',
+        scope: 'openid profile email',
+      }
+      
+      // Add all parameters
+      Object.entries(params).forEach(([key, value]) => {
+        loginUrl.searchParams.set(key, value)
+      })
+      
+      // Add state for security
+      const state = crypto.randomUUID()
+      sessionStorage.setItem('auth_state', state)
+      loginUrl.searchParams.set('state', state)
+      
+      // Log complete URL and parameters for debugging
+      console.log('Login URL:', loginUrl.toString())
+      console.log('Parameters:', {
+        ...params,
+        state,
+        fullUrl: loginUrl.toString()
+      })
+      
+      window.location.href = loginUrl.toString()
+    } catch (error) {
+      console.error('Error during login:', error)
     }
-    
-    // Add all parameters
-    Object.entries(params).forEach(([key, value]) => {
-      loginUrl.searchParams.set(key, value)
-    })
-    
-    // Add state for security
-    const state = crypto.randomUUID()
-    sessionStorage.setItem('auth_state', state)
-    loginUrl.searchParams.set('state', state)
-    
-    // Log complete URL and parameters for debugging
-    console.log('Login URL:', loginUrl.toString())
-    console.log('Parameters:', {
-      ...params,
-      state,
-      fullUrl: loginUrl.toString()
-    })
-    
-    window.location.href = loginUrl.toString()
   }
 
   return (

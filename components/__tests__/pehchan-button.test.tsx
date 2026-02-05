@@ -39,8 +39,13 @@ describe('PehchanLoginButton', () => {
       }
     })
 
-    // Mock crypto.randomUUID
-    jest.spyOn(crypto, 'randomUUID').mockImplementation(() => mockUUID)
+    // Mock crypto.randomUUID with globalThis
+    Object.defineProperty(globalThis, 'crypto', {
+      value: {
+        randomUUID: jest.fn(() => mockUUID)
+      },
+      configurable: true
+    })
   })
 
   afterEach(() => {
@@ -72,15 +77,17 @@ describe('PehchanLoginButton', () => {
   })
 
   it('handles missing environment variables gracefully', () => {
-    delete process.env.NEXT_PUBLIC_PEHCHAN_URL
-    delete process.env.NEXT_PUBLIC_CLIENT_ID
-
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    
+    // Set environment variables to undefined
+    process.env.NEXT_PUBLIC_PEHCHAN_URL = undefined
+    process.env.NEXT_PUBLIC_CLIENT_ID = undefined
     
     render(<PehchanLoginButton />)
     fireEvent.click(screen.getByText('Login with Pehchan'))
 
-    expect(consoleSpy).toHaveBeenCalled()
+    expect(consoleSpy).toHaveBeenCalledWith('Missing required environment variables: NEXT_PUBLIC_PEHCHAN_URL or NEXT_PUBLIC_CLIENT_ID')
+    expect(window.location.href).toBe('')
     consoleSpy.mockRestore()
   })
 
