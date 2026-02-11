@@ -43,6 +43,13 @@
       "when": 1767267854498,
       "tag": "0005_brown_mojo",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1770403791227,
+      "tag": "0006_free_cloak",
+      "breakpoints": true
     }
   ]
 }

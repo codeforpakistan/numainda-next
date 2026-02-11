@@ -38,3 +38,4 @@ yarn-error.log*
 docs/
 data/
 .playwright-mcp/public/uploads/administratorcurdua7f4f2b3b5b93d04f2589.pdf
+public/uploads/*.pdf
