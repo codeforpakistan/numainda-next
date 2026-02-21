@@ -11,9 +11,9 @@ export default function IndexPage() {
         <div className="container max-w-6xl px-4">
           <div className="mx-auto max-w-4xl space-y-6">
             <div className="text-center">
-              <h1 className="text-3xl font-bold md:text-4xl lg:text-5xl">
+              {/* <h1 className="text-3xl font-bold md:text-4xl lg:text-5xl">
                 Find your representative
-              </h1>
+              </h1> */}
             </div>
 
             {/* Search Box */}
