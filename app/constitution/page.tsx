@@ -89,6 +89,17 @@ export default async function ConstitutionPage() {
               <p className="leading-7 text-muted-foreground">
                 {getSectionSummary(section.id as SectionId)}
               </p>
+              <p className="mt-4 text-sm text-muted-foreground">
+                Want to learn more?{' '}
+                <a
+                  href="https://na.gov.pk/uploads/documents/1333523681_951.pdf"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary underline hover:text-primary/80"
+                >
+                  Click here
+                </a>
+              </p>
             </CardContent>
           </Card>
         ))}
@@ -99,7 +110,7 @@ export default async function ConstitutionPage() {
 
 function getSectionSummary(id: SectionId): string {
   const summaries: Record<SectionId, string> = {
-    preamble: "The Preamble states that Pakistan's sovereignty belongs to Allah, democracy will be based on Islamic principles, minorities are protected, and justice, equality, and rights are guaranteed.",
+    preamble: "The Preamble to the Constitution of Pakistan, historically rooted in the Objectives Resolution, establishes the nation's foundational philosophy by declaring that absolute sovereignty over the universe belongs solely to Allah, with the state's authority exercised as a sacred trust through the chosen representatives of the people. It envisions a democratic, federal state where Islamic principles of freedom, equality, tolerance, and social justice are fully observed, enabling Muslims to live their lives in accordance with the Quran and Sunnah. Concurrently, it explicitly guarantees the independence of the judiciary, ensures fundamental rights for all citizens, and mandates adequate provisions for religious minorities to freely profess their faiths and develop their cultures.",
     introductory: "Defines Pakistan as the Islamic Republic, lays out its territories, and establishes basic principles such as equality and rule of law.",
     "fundamental-rights": "Lists citizens' rights including freedom of speech, religion, and protection from discrimination. These rights are enforceable in courts.",
     federation: "Describes the structure of the federal government, the roles of the President, Prime Minister, and Parliament, and the separation of powers.",
