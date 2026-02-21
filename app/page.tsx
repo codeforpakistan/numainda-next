@@ -18,6 +18,9 @@ export default function IndexPage() {
 
             {/* Search Box */}
             <div className="rounded-lg border bg-card p-4 shadow-md md:p-6">
+              <label className="mb-3 block text-sm font-medium text-muted-foreground">
+                Local Representative Search
+              </label>
               <RepresentativeSearch />
             </div>
           </div>
