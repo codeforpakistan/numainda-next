@@ -10,12 +10,22 @@ export const siteConfig = {
       href: "/",
     },
     {
-      title: "Representatives",
-      href: "/representatives",
-    },
-    {
       title: "About",
       href: "/about",
+      children: [
+        {
+          title: "About Us",
+          href: "/about",
+        },
+        {
+          title: "Newsletter",
+          href: "/settings/subscriptions",
+        },
+      ],
+    },
+    {
+      title: "Representatives",
+      href: "/representatives",
     },
     {
       title: "Proceedings",
