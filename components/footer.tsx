@@ -1,8 +1,18 @@
+'use client'
+
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 
 import { cn } from "@/lib/utils"
 
 export function Footer({ className }: { className?: string }) {
+  const pathname = usePathname()
+
+  // Hide footer on the chat page (full-screen chat experience)
+  if (pathname === "/chat") {
+    return null
+  }
+
   return (
     <footer
       className={cn("relative bottom-0 z-40 border-t bg-background", className)}

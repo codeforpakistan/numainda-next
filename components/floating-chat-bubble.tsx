@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from "react"
+import { usePathname } from "next/navigation"
 import { useChat } from "ai/react"
 import {
   Bot,
@@ -26,6 +27,7 @@ import {
 import { ChatInput } from "@/components/ui/chat/chat-input"
 
 export function FloatingChatBubble() {
+  const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const { toast } = useToast()
@@ -64,6 +66,11 @@ export function FloatingChatBubble() {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
     }
   }, [messages, isOpen])
+
+  // Hide on homepage and chat page (they have their own chat UI)
+  if (pathname === "/" || pathname === "/chat") {
+    return null
+  }
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -162,7 +169,7 @@ export function FloatingChatBubble() {
                   <ChatBubbleMessage>
                     <Markdown
                       remarkPlugins={[remarkGfm]}
-                      className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:p-2"
+                      className="prose prose-sm max-w-none dark:prose-invert prose-p:leading-relaxed prose-pre:p-2"
                     >
                       {message.content}
                     </Markdown>

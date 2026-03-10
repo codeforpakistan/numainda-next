@@ -50,7 +50,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <div className="relative flex h-screen flex-col">
               <SiteHeader />
-              <div className="flex flex-1 overflow-y-auto">{children}</div>
+              <div className="flex min-h-0 flex-1 overflow-y-auto">{children}</div>
               <Footer />
               <Toaster />
               <FloatingChatBubble />
