@@ -10,16 +10,12 @@ export const siteConfig = {
       href: "/",
     },
     {
-      title: "Representatives",
-      href: "/representatives",
-    },
-    {
       title: "About",
       href: "/about",
     },
     {
-      title: "Proceedings",
-      href: "/proceedings",
+      title: "Representatives",
+      href: "/representatives",
     },
     {
       title: "Acts",
@@ -28,6 +24,10 @@ export const siteConfig = {
     {
       title: "Constitution",
       href: "/constitution",
+    },
+    {
+      title: "Proceedings",
+      href: "/proceedings",
     },
   ],
   links: {
