@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { representatives } from '@/lib/db/schema/representatives';
 import { sql, isNotNull } from 'drizzle-orm';
+import { resolveRepresentativeImageUrl } from '@/lib/representative-image';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,9 +66,7 @@ export async function GET(request: Request) {
     // Transform imageLocalPath to public URL
     const resultsWithImages = results.map((rep: any) => ({
       ...rep,
-      imageUrl: rep.imageLocalPath
-        ? `/representatives/${rep.imageLocalPath.split('/').pop()}`
-        : rep.imageUrl,
+      imageUrl: resolveRepresentativeImageUrl(rep.imageLocalPath, rep.imageUrl),
     }));
 
     return NextResponse.json({

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { text, varchar, timestamp, pgTable, real, index } from "drizzle-orm/pg-core";
+import { text, varchar, timestamp, pgTable, real, index, integer } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 import { nanoid } from "@/lib/utils";
@@ -22,33 +22,50 @@ export const representatives = pgTable(
       .primaryKey()
       .$defaultFn(() => nanoid()),
 
+    // Assembly & seat classification
+    assembly: varchar("assembly", { length: 32 })
+      .notNull()
+      .default("national"), // "national" | "kp" | "punjab" | "sindh" | "balochistan"
+    seatType: varchar("seat_type", { length: 32 })
+      .notNull()
+      .default("general"), // "general" | "women_reserved" | "minority_reserved"
+    sequenceNumber: integer("sequence_number"),
+
     // Basic Information
     name: text("name").notNull(),
     nameClean: text("name_clean").notNull(), // Without titles (Mr., Dr., etc.)
     fatherName: text("father_name"),
+    age: integer("age"),
 
     // Constituency Details
-    constituency: text("constituency").notNull(), // Full: "NA-2Swat-I"
-    constituencyCode: varchar("constituency_code", { length: 20 }).notNull(), // "NA-2"
+    constituency: text("constituency"), // Full: "NA-2Swat-I" (nullable for provincial reserved seats without composed form)
+    constituencyCode: varchar("constituency_code", { length: 20 }), // "NA-2", "PK-1", "WR-1", nullable for Balochistan etc.
     constituencyName: text("constituency_name"), // "Swat-I"
     district: text("district"), // "Swat"
     province: varchar("province", { length: 100 }), // "Khyber Pukhtunkhwa", "Punjab", etc.
 
     // Political Info
-    party: varchar("party", { length: 100 }).notNull(), // "IND", "PML(N)", "PPP", etc.
+    party: varchar("party", { length: 200 }).notNull(), // raw full name from source
+    partyCode: varchar("party_code", { length: 16 }), // canonical: "PTI", "PMLN", "PPP", "IND", "JUIF", ...
     oathTakingDate: timestamp("oath_taking_date"),
 
     // Contact Information
+    email: text("email"),
     phone: varchar("phone", { length: 50 }),
+    facebookHandle: text("facebook_handle"),
     permanentAddress: text("permanent_address"),
     islamabadAddress: text("islamabad_address"),
 
     // Profile & Media
-    profileUrl: text("profile_url"), // Link to NA website profile
-    imageUrl: text("image_url"), // Original image URL from NA website
-    imageLocalPath: text("image_local_path"), // Local file path
+    profileUrl: text("profile_url"), // Link to assembly website profile
+    profileSourceId: text("profile_source_id"), // e.g. pabalochistan member-profile id
+    imageUrl: text("image_url"), // Original image URL from source website
+    imageLocalPath: text("image_local_path"), // Local file path / public-relative (e.g. "kp/foo.jpg")
     imageS3Key: text("image_s3_key"), // S3 key if uploaded to cloud
     profileHtml: text("profile_html"), // Raw HTML from profile page for future parsing
+
+    // Data provenance
+    provenanceNote: text("provenance_note"), // Free-form caveats about source quality
 
     // Geographic Data (for location-based search)
     latitude: real("latitude"), // Constituency centroid
@@ -73,8 +90,15 @@ export const representatives = pgTable(
     constituencyCodeIdx: index("representatives_constituency_code_idx").on(table.constituencyCode),
     provinceIdx: index("representatives_province_idx").on(table.province),
     partyIdx: index("representatives_party_idx").on(table.party),
+    partyCodeIdx: index("representatives_party_code_idx").on(table.partyCode),
     districtIdx: index("representatives_district_idx").on(table.district),
     nameCleanIdx: index("representatives_name_clean_idx").on(table.nameClean),
+    assemblyIdx: index("representatives_assembly_idx").on(table.assembly),
+    seatTypeIdx: index("representatives_seat_type_idx").on(table.seatType),
+    assemblyConstituencyIdx: index("representatives_assembly_constituency_idx").on(
+      table.assembly,
+      table.constituencyCode,
+    ),
     // GIS index for location queries (requires PostGIS extension in future)
     // locationIdx: index("representatives_location_idx").using("gist", sql`point(longitude, latitude)`),
   })

@@ -294,7 +294,13 @@ export default function RepresentativeDetailPage({
                     rel="noopener noreferrer"
                     className="text-base text-primary hover:underline"
                   >
-                    View on na.gov.pk →
+                    View on {(() => {
+                      try {
+                        return new URL(representative.profileUrl).hostname.replace(/^www\./, '')
+                      } catch {
+                        return 'source'
+                      }
+                    })()} →
                   </a>
                 </div>
               )}

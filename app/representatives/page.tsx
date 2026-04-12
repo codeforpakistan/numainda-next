@@ -12,11 +12,15 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/components/ui/use-toast'
 import Link from 'next/link'
 import Image from 'next/image'
+import { ASSEMBLIES, getAssemblyMeta } from '@/lib/assemblies'
+import { cn } from '@/lib/utils'
 
 interface Representative {
   id: string
   name: string
   nameClean: string
+  assembly?: string
+  seatType?: string
   constituency: string
   constituencyCode: string
   constituencyName: string | null
@@ -31,10 +35,16 @@ interface Representative {
   distance?: number
 }
 
+interface AssemblyCount {
+  value: string
+  count: number
+}
+
 interface FilterOptions {
   provinces: string[]
   parties: string[]
   districts: string[]
+  assemblies?: AssemblyCount[]
 }
 
 export default function RepresentativesPage() {
@@ -58,6 +68,7 @@ export default function RepresentativesPage() {
   const province = searchParams.get('province') || undefined
   const party = searchParams.get('party') || undefined
   const district = searchParams.get('district') || undefined
+  const assembly = searchParams.get('assembly') || ''
   const lat = searchParams.get('lat')
   const lng = searchParams.get('lng')
   const page = parseInt(searchParams.get('page') || '1', 10)
@@ -97,6 +108,7 @@ export default function RepresentativesPage() {
           if (province) params.append('province', province)
           if (party) params.append('party', party)
           if (district) params.append('district', district)
+          if (assembly) params.append('assembly', assembly)
           params.append('page', page.toString())
           params.append('limit', '20')
         }
@@ -121,7 +133,7 @@ export default function RepresentativesPage() {
     }
 
     fetchRepresentatives()
-  }, [search, province, party, district, lat, lng, page, toast])
+  }, [search, province, party, district, assembly, lat, lng, page, toast])
 
   const updateSearchParams = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -186,15 +198,63 @@ export default function RepresentativesPage() {
     router.push('/representatives')
   }
 
-  const hasActiveFilters = search || province || party || district || lat || lng
+  const hasActiveFilters = search || province || party || district || assembly || lat || lng
+
+  const assemblyCounts = new Map(
+    (filters.assemblies ?? []).map((a) => [a.value, a.count]),
+  )
+  const totalAll = Array.from(assemblyCounts.values()).reduce((a, b) => a + b, 0)
 
   return (
     <div className="container py-8">
-      <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold">National Assembly Representatives</h1>
+      <div className="mb-6">
+        <h1 className="mb-2 text-3xl font-bold">Your Representatives — MNAs &amp; MPAs</h1>
         <p className="text-muted-foreground">
-          Find your representative from Pakistan&apos;s National Assembly
+          Search members of Pakistan&apos;s National Assembly (MNAs) and the Khyber Pakhtunkhwa, Sindh, and Balochistan provincial assemblies (MPAs).
         </p>
+      </div>
+
+      {/* Assembly tabs — primary discoverability signal */}
+      <div className="mb-6 -mx-2 overflow-x-auto px-2 pb-2">
+        <div className="flex min-w-max gap-2" role="tablist" aria-label="Assembly">
+          {ASSEMBLIES.map((a) => {
+            const active =
+              (a.apiValue === null && !assembly) || a.apiValue === assembly
+            const count =
+              a.apiValue === null ? totalAll : assemblyCounts.get(a.apiValue) ?? 0
+            return (
+              <button
+                key={a.key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() =>
+                  updateSearchParams({ assembly: a.apiValue ?? null })
+                }
+                className={cn(
+                  'inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-colors',
+                  active
+                    ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                    : 'border-border bg-background text-foreground hover:bg-muted',
+                )}
+              >
+                <span>{a.shortLabel}</span>
+                {count > 0 && (
+                  <span
+                    className={cn(
+                      'rounded-full px-2 py-0.5 text-xs',
+                      active
+                        ? 'bg-primary-foreground/20 text-primary-foreground'
+                        : 'bg-muted text-muted-foreground',
+                    )}
+                  >
+                    {count}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -372,6 +432,7 @@ export default function RepresentativesPage() {
                       </p>
                     )}
                     <div className="mt-2 flex flex-wrap gap-1">
+                      <Badge>{getAssemblyMeta(rep.assembly).memberTitle}</Badge>
                       <Badge variant="secondary">{rep.party}</Badge>
                       {rep.province && <Badge variant="outline">{rep.province}</Badge>}
                     </div>

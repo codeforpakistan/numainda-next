@@ -14,7 +14,7 @@ export const siteConfig = {
       href: "/about",
     },
     {
-      title: "Representatives",
+      title: "MNAs & MPAs",
       href: "/representatives",
     },
     {
