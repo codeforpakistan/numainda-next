@@ -32,6 +32,14 @@ export async function GET() {
       .where(sql`${representatives.district} IS NOT NULL`)
       .orderBy(representatives.district);
 
+    // Counts per assembly so the UI can show e.g. "MNAs (332)", "KP MPAs (145)"
+    const assemblyCountsResult = await db.execute(sql`
+      SELECT assembly, count(*)::int AS count
+      FROM representatives
+      GROUP BY assembly
+      ORDER BY assembly
+    `);
+
     const provinces = provincesResult
       .map((r) => r.province)
       .filter((p): p is string => p !== null);
@@ -44,11 +52,17 @@ export async function GET() {
       .map((r) => r.district)
       .filter((d): d is string => d !== null);
 
+    const assemblies = assemblyCountsResult.map((r: any) => ({
+      value: r.assembly as string,
+      count: r.count as number,
+    }));
+
     return NextResponse.json({
       data: {
         provinces,
         parties,
         districts,
+        assemblies,
       },
     });
   } catch (error) {

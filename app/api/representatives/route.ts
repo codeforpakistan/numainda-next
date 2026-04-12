@@ -4,6 +4,7 @@ import { representatives } from '@/lib/db/schema/representatives';
 import { representativeEmbeddings } from '@/lib/db/schema/representative-embeddings';
 import { desc, ilike, or, and, eq, count, sql, cosineDistance } from 'drizzle-orm';
 import { generateEmbedding } from '@/lib/ai/embedding';
+import { resolveRepresentativeImageUrl } from '@/lib/representative-image';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,7 @@ export async function GET(request: Request) {
     const province = searchParams.get('province') || '';
     const party = searchParams.get('party') || '';
     const district = searchParams.get('district') || '';
+    const assembly = searchParams.get('assembly') || '';
     const constituencyCode = searchParams.get('constituency') || '';
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '20', 10);
@@ -34,12 +36,15 @@ export async function GET(request: Request) {
           id: representatives.id,
           name: representatives.name,
           nameClean: representatives.nameClean,
+          assembly: representatives.assembly,
+          seatType: representatives.seatType,
           constituency: representatives.constituency,
           constituencyCode: representatives.constituencyCode,
           constituencyName: representatives.constituencyName,
           district: representatives.district,
           province: representatives.province,
           party: representatives.party,
+          partyCode: representatives.partyCode,
           imageUrl: representatives.imageUrl,
           imageLocalPath: representatives.imageLocalPath,
           phone: representatives.phone,
@@ -56,9 +61,7 @@ export async function GET(request: Request) {
       // Transform imageLocalPath to public URL
       const resultsWithImages = results.map(rep => ({
         ...rep,
-        imageUrl: rep.imageLocalPath
-          ? `/representatives/${rep.imageLocalPath.split('/').pop()}`
-          : rep.imageUrl,
+        imageUrl: resolveRepresentativeImageUrl(rep.imageLocalPath, rep.imageUrl),
       }));
 
       // Get total count for semantic search
@@ -110,6 +113,10 @@ export async function GET(request: Request) {
       conditions.push(ilike(representatives.constituencyCode, `%${constituencyCode}%`));
     }
 
+    if (assembly) {
+      conditions.push(eq(representatives.assembly, assembly));
+    }
+
     const whereCondition = conditions.length > 0 ? and(...conditions) : undefined;
 
     // Fetch representatives with filters
@@ -118,12 +125,15 @@ export async function GET(request: Request) {
         id: representatives.id,
         name: representatives.name,
         nameClean: representatives.nameClean,
+        assembly: representatives.assembly,
+        seatType: representatives.seatType,
         constituency: representatives.constituency,
         constituencyCode: representatives.constituencyCode,
         constituencyName: representatives.constituencyName,
         district: representatives.district,
         province: representatives.province,
         party: representatives.party,
+        partyCode: representatives.partyCode,
         imageUrl: representatives.imageUrl,
         imageLocalPath: representatives.imageLocalPath,
         phone: representatives.phone,
@@ -136,12 +146,9 @@ export async function GET(request: Request) {
       .limit(limit)
       .offset(offset);
 
-    // Transform imageLocalPath to public URL
     const repsWithImages = reps.map(rep => ({
       ...rep,
-      imageUrl: rep.imageLocalPath
-        ? `/representatives/${rep.imageLocalPath.split('/').pop()}`
-        : rep.imageUrl,
+      imageUrl: resolveRepresentativeImageUrl(rep.imageLocalPath, rep.imageUrl),
     }));
 
     // Get total count

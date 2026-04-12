@@ -55,6 +55,7 @@ module.exports = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", ...fontFamily.sans],
+        urdu: ["var(--font-urdu)", ...fontFamily.serif],
       },
       keyframes: {
         "accordion-down": {

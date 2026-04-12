@@ -27,3 +27,11 @@ jobs:
 
       - name: Build project
         run: npm run build
+        env:
+          # Bypass compile-time validation of app env. Vercel validates at runtime.
+          SKIP_ENV_VALIDATION: "true"
+          # Dummy values for vendor SDKs that read signing keys at module import
+          # time (e.g. @upstash/qstash's verifySignatureAppRouter). CI only needs
+          # these to satisfy the collect-page-data step; real values live in Vercel.
+          QSTASH_CURRENT_SIGNING_KEY: "build-placeholder"
+          QSTASH_NEXT_SIGNING_KEY: "build-placeholder"

@@ -1,0 +1,480 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { useRouter } from '@/i18n/navigation'
+import { Search, MapPin, Loader2, Filter, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useToast } from '@/components/ui/use-toast'
+import { Link } from '@/i18n/navigation'
+import Image from 'next/image'
+import { ASSEMBLIES, getAssemblyMeta } from '@/lib/assemblies'
+import { cn } from '@/lib/utils'
+
+interface Representative {
+  id: string
+  name: string
+  nameClean: string
+  assembly?: string
+  seatType?: string
+  constituency: string
+  constituencyCode: string
+  constituencyName: string | null
+  district: string | null
+  province: string
+  party: string
+  imageUrl: string | null
+  imageLocalPath: string | null
+  phone: string | null
+  latitude: number | null
+  longitude: number | null
+  distance?: number
+}
+
+interface AssemblyCount {
+  value: string
+  count: number
+}
+
+interface FilterOptions {
+  provinces: string[]
+  parties: string[]
+  districts: string[]
+  assemblies?: AssemblyCount[]
+}
+
+export default function RepresentativesPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { toast } = useToast()
+  const t = useTranslations('Representatives')
+
+  const [representatives, setRepresentatives] = useState<Representative[]>([])
+  const [filters, setFilters] = useState<FilterOptions>({ provinces: [], parties: [], districts: [] })
+  const [loading, setLoading] = useState(true)
+  const [locationLoading, setLocationLoading] = useState(false)
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    totalCount: 0,
+    totalPages: 0,
+  })
+
+  // Get query parameters
+  const search = searchParams.get('search') || ''
+  const province = searchParams.get('province') || undefined
+  const party = searchParams.get('party') || undefined
+  const district = searchParams.get('district') || undefined
+  const assembly = searchParams.get('assembly') || ''
+  const lat = searchParams.get('lat')
+  const lng = searchParams.get('lng')
+  const page = parseInt(searchParams.get('page') || '1', 10)
+
+  // Fetch filter options
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const response = await fetch('/api/representatives/filters')
+        const data = await response.json()
+        setFilters(data.data)
+      } catch (error) {
+        console.error('Failed to fetch filters:', error)
+      }
+    }
+    fetchFilters()
+  }, [])
+
+  // Fetch representatives
+  useEffect(() => {
+    const fetchRepresentatives = async () => {
+      setLoading(true)
+      try {
+        let url = '/api/representatives?'
+        const params = new URLSearchParams()
+
+        if (lat && lng) {
+          // Location-based search
+          url = '/api/representatives/by-location?'
+          params.append('lat', lat)
+          params.append('lng', lng)
+          params.append('radius', '50')
+          params.append('limit', '20')
+        } else {
+          // Regular search
+          if (search) params.append('search', search)
+          if (province) params.append('province', province)
+          if (party) params.append('party', party)
+          if (district) params.append('district', district)
+          if (assembly) params.append('assembly', assembly)
+          params.append('page', page.toString())
+          params.append('limit', '20')
+        }
+
+        const response = await fetch(url + params.toString())
+        const data = await response.json()
+
+        setRepresentatives(data.data || [])
+        if (data.pagination) {
+          setPagination(data.pagination)
+        }
+      } catch (error) {
+        console.error('Failed to fetch representatives:', error)
+        toast({
+          title: t('errorTitle'),
+          description: t('errorLoadingDesc'),
+          variant: 'destructive',
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRepresentatives()
+  }, [search, province, party, district, assembly, lat, lng, page, toast, t])
+
+  const updateSearchParams = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString())
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value) {
+        params.set(key, value)
+      } else {
+        params.delete(key)
+      }
+    })
+
+    // Reset page when changing filters
+    if (Object.keys(updates).some(k => k !== 'page')) {
+      params.delete('page')
+    }
+
+    router.push(`/representatives?${params.toString()}`)
+  }
+
+  const handleUseLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: t('locationNotSupported'),
+        description: t('locationNotSupportedDesc'),
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setLocationLoading(true)
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        toast({
+          title: t('locationDetectedTitle'),
+          description: t('locationDetected', { lat: latitude.toFixed(4), lng: longitude.toFixed(4) }),
+        })
+        // Clear other filters when using location
+        router.push(`/representatives?lat=${latitude}&lng=${longitude}`)
+        setLocationLoading(false)
+      },
+      (error) => {
+        console.error('Geolocation error:', error)
+        toast({
+          title: t('locationAccessDenied'),
+          description: t('locationAccessDeniedDesc'),
+          variant: 'destructive',
+        })
+        setLocationLoading(false)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    )
+  }
+
+  const clearAllFilters = () => {
+    router.push('/representatives')
+  }
+
+  const hasActiveFilters = search || province || party || district || assembly || lat || lng
+
+  const assemblyCounts = new Map(
+    (filters.assemblies ?? []).map((a) => [a.value, a.count]),
+  )
+  const totalAll = Array.from(assemblyCounts.values()).reduce((a, b) => a + b, 0)
+
+  return (
+    <div className="container py-8">
+      <div className="mb-6">
+        <h1 className="mb-2 text-3xl font-bold">{t('title')}</h1>
+        <p className="text-muted-foreground">
+          {t('subtitle')}
+        </p>
+      </div>
+
+      {/* Assembly tabs — primary discoverability signal */}
+      <div className="mb-6 -mx-2 overflow-x-auto px-2 pb-2">
+        <div className="flex min-w-max gap-2" role="tablist" aria-label="Assembly">
+          {ASSEMBLIES.map((a) => {
+            const active =
+              (a.apiValue === null && !assembly) || a.apiValue === assembly
+            const count =
+              a.apiValue === null ? totalAll : assemblyCounts.get(a.apiValue) ?? 0
+            return (
+              <button
+                key={a.key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() =>
+                  updateSearchParams({ assembly: a.apiValue ?? null })
+                }
+                className={cn(
+                  'inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-colors',
+                  active
+                    ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                    : 'border-border bg-background text-foreground hover:bg-muted',
+                )}
+              >
+                <span>{a.shortLabel}</span>
+                {count > 0 && (
+                  <span
+                    className={cn(
+                      'rounded-full px-2 py-0.5 text-xs',
+                      active
+                        ? 'bg-primary-foreground/20 text-primary-foreground'
+                        : 'bg-muted text-muted-foreground',
+                    )}
+                  >
+                    {count}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="mb-6 space-y-4">
+        {/* Search Bar */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder={t('searchPlaceholder')}
+              value={search}
+              onChange={(e) => updateSearchParams({ search: e.target.value || null })}
+              className="pl-10"
+            />
+          </div>
+          <Button
+            variant="outline"
+            onClick={handleUseLocation}
+            disabled={locationLoading}
+          >
+            {locationLoading ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                {t('locating')}
+              </>
+            ) : (
+              <>
+                <MapPin className="mr-2 size-4" />
+                {t('useLocation')}
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap gap-2">
+          <Select
+            value={province}
+            onValueChange={(value) => updateSearchParams({ province: value })}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder={t('allProvinces')} />
+            </SelectTrigger>
+            <SelectContent>
+              {filters.provinces.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {p}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={party}
+            onValueChange={(value) => updateSearchParams({ party: value })}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder={t('allParties')} />
+            </SelectTrigger>
+            <SelectContent>
+              {filters.parties.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {p}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={district}
+            onValueChange={(value) => updateSearchParams({ district: value })}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder={t('allDistricts')} />
+            </SelectTrigger>
+            <SelectContent>
+              {filters.districts.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {d}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={clearAllFilters}>
+              <X className="mr-2 size-4" />
+              {t('clearFilters')}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Location Info Banner */}
+      {lat && lng && (
+        <div className="mb-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+          <div className="flex items-start gap-3">
+            <MapPin className="mt-0.5 size-5 text-primary" />
+            <div className="flex-1">
+              <p className="font-medium text-primary">{t('locationSearching')}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {t('locationDetected', { lat: parseFloat(lat).toFixed(4), lng: parseFloat(lng).toFixed(4) })}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {t('locationRadius')}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Results Count */}
+      <div className="mb-4 text-sm text-muted-foreground">
+        {loading ? (
+          t('loading')
+        ) : (
+          <>
+            {t('showing', { count: representatives.length, total: pagination.totalCount })}
+          </>
+        )}
+      </div>
+
+      {/* Representatives Grid */}
+      {loading ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center gap-4">
+                <Skeleton className="size-16 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
+      ) : representatives.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-muted-foreground">
+              {t('noResults')}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {representatives.map((rep) => (
+            <Link key={rep.id} href={`/representatives/${rep.id}`}>
+              <Card className="h-full transition-shadow hover:shadow-lg">
+                <CardHeader className="flex flex-row items-start gap-4">
+                  <div className="relative size-16 flex-shrink-0 overflow-hidden rounded-full bg-muted">
+                    {rep.imageUrl ? (
+                      <img
+                        src={rep.imageUrl}
+                        alt={rep.nameClean}
+                        className="size-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                          e.currentTarget.parentElement!.innerHTML = `<div class="flex size-full items-center justify-center text-2xl font-bold text-muted-foreground">${rep.nameClean.charAt(0)}</div>`
+                        }}
+                      />
+                    ) : (
+                      <div className="flex size-full items-center justify-center text-2xl font-bold text-muted-foreground">
+                        {rep.nameClean.charAt(0)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold leading-tight">{rep.nameClean}</h3>
+                    {rep.constituencyName && (
+                      <p className="text-sm text-muted-foreground">
+                        {rep.constituencyName}
+                      </p>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      <Badge>{getAssemblyMeta(rep.assembly).memberTitle}</Badge>
+                      <Badge variant="secondary">{rep.party}</Badge>
+                      {rep.province && <Badge variant="outline">{rep.province}</Badge>}
+                    </div>
+                    {rep.distance && (
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        <MapPin className="mr-1 inline size-3" />
+                        {t('kmAway', { distance: rep.distance.toFixed(1) })}
+                      </p>
+                    )}
+                  </div>
+                </CardHeader>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!loading && pagination.totalPages > 1 && !lat && !lng && (
+        <div className="mt-8 flex justify-center gap-2">
+          <Button
+            variant="outline"
+            disabled={page === 1}
+            onClick={() => updateSearchParams({ page: (page - 1).toString() })}
+          >
+            {t('previous')}
+          </Button>
+          <div className="flex items-center gap-2 px-4">
+            {t('page', { current: page, total: pagination.totalPages })}
+          </div>
+          <Button
+            variant="outline"
+            disabled={page === pagination.totalPages}
+            onClick={() => updateSearchParams({ page: (page + 1).toString() })}
+          >
+            {t('next')}
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}
