@@ -353,6 +353,59 @@ These client components wrap server components to trigger GA events on mount.
 
 **Documentation**: See `docs/google-analytics-integration.md` for comprehensive setup details, metric recommendations, and troubleshooting.
 
+## Bug Fixes & Improvements (June 2026)
+
+### 1. Chat Auto-Scroll Fix
+**Issue**: Chat automatically scrolled to bottom on every message, disrupting users reading previous messages.
+
+**Solution**: Implemented smart scroll detection that only auto-scrolls when user is already at the bottom of the chat.
+
+**Files Modified**:
+- `app/[locale]/chat/page.tsx` - Added scroll position tracking with `messagesContainerRef` and `shouldAutoScrollRef`
+- `app/chat/page.tsx` - Same smart scroll implementation
+- `components/floating-chat-bubble.tsx` - Removed duplicate scroll triggers, added smart scroll logic
+
+**How it works**:
+- Tracks distance from bottom: `scrollHeight - (scrollTop + clientHeight)`
+- Only auto-scrolls if within 100px of bottom
+- Preserves user's scroll position when reading previous messages
+- Smooth scrolling when at bottom
+
+**Benefits**:
+- ✅ Users can read previous messages without interruption
+- ✅ Auto-scroll still works when at bottom
+- ✅ Much better mobile experience
+- ✅ No more jumping/jarring scrolls during message streaming
+
+### 2. Duplicate Navigation Bar Fix
+**Issue**: Chat page showed duplicate elements at top and bottom - main navigation bar at top, and footer appearing at bottom below chat area, cluttering the interface.
+
+**Solution**: Created `LayoutContent` component to conditionally hide footer on chat pages while keeping the main navigation. The footer itself already contains only the attribution text (no duplicate nav items), but it appeared as clutter in the chat interface.
+
+**Files Modified**:
+- `app/layout.tsx` - Uses new `LayoutContent` component instead of directly rendering SiteHeader/Footer
+- `components/layout-content.tsx` - New component that conditionally renders navigation based on route
+- `components/footer.tsx` - Already optimized (shows only attribution: "Built with ❤️ by Code For Pakistan")
+
+**How it works**:
+```typescript
+const isChatPage = pathname.includes('/chat')
+
+return (
+  <>
+    <SiteHeader />  // Always shown
+    <div>{children}</div>
+    {!isChatPage && <Footer />}  // Hidden only on chat pages
+  </>
+)
+```
+
+**Benefits**:
+- ✅ Clean chat interface with only top navigation
+- ✅ No unnecessary footer clutter on chat page
+- ✅ Footer attribution still shows on all other pages
+- ✅ Focused, distraction-free chat experience
+
 ## External Services
 
 - **Pehchan**: Pakistan's national digital identity (OAuth provider)
