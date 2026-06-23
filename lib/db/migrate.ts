@@ -15,6 +15,9 @@ const connection = postgres(env.DATABASE_URL, { max: 1 });
 
 const db = drizzle(connection);
 
+  // Ensure pgvector exists before migrations create vector columns.
+  await connection`CREATE EXTENSION IF NOT EXISTS vector`;
+
 
   console.log("⏳ Running migrations...");
 
