@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { usePathname } from "next/navigation"
 import { useChat } from "ai/react"
 import {
@@ -32,6 +32,8 @@ export function FloatingChatBubble() {
   const [isGenerating, setIsGenerating] = useState(false)
   const { toast } = useToast()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+  const shouldAutoScrollRef = useRef(true)
 
   const {
     messages,
@@ -51,7 +53,7 @@ export function FloatingChatBubble() {
       },
     ],
     onResponse: (response) => {
-      if (response) {
+      if// Don't auto-scroll here; let the useEffect handle it
         setIsGenerating(false)
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
       }
@@ -59,11 +61,30 @@ export function FloatingChatBubble() {
     onError: (error) => {
       if (error) setIsGenerating(false)
     },
-  })
+  // Track if user is at bottom of messages
+  const handleScroll = useCallback(() => {
+    if (!messagesContainerRef.current) return
+    
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current
+    const distanceFromBottom = scrollHeight - (scrollTop + clientHeight)
+    
+    // Consider "at bottom" if within 100px threshold
+    shouldAutoScrollRef.current = distanceFromBottom < 100
+  }, [])
 
+  // Auto-scroll only if user is at bottom and chat is open
+  useEffect(() => {
+    if (shouldAutoScrollRef.current && isOpen && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+    }
+  }, [messages, isOpen])
+
+  // Scroll to bottom when chat opens
   useEffect(() => {
     if (isOpen) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+      shouldAutoScrollRef.current = true
+    }
+  }, [dRef.current?.scrollIntoView({ behavior: "smooth" })
     }
   }, [messages, isOpen])
 
@@ -145,7 +166,11 @@ export function FloatingChatBubble() {
           </div>
 
           {/* Messages */}
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
+          <div 
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4"
+            ref={messagesContainerRef}
+            onScroll={handleScroll}
+          >
             <div className="flex flex-col gap-4">
               {messages.map((message: any) => (
                 <ChatBubble

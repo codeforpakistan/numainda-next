@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState, useRef, useEffect } from "react"
+import { Suspense, useState, useRef, useEffect, useCallback } from "react"
 import { useSearchParams } from "next/navigation"
 import { useChat } from "ai/react"
 import {
@@ -41,6 +41,8 @@ function ChatContent() {
   const { toast } = useToast()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+  const shouldAutoScrollRef = useRef(true)
 
   const {
     messages,
@@ -78,10 +80,28 @@ function ChatContent() {
     }
   }, [initialQuery, hasSubmittedInitial, append])
 
-  // Auto-scroll to latest message
+  // Track if user is at bottom of messages
+  const handleScroll = useCallback(() => {
+    if (!messagesContainerRef.current) return
+    
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current
+    const distanceFromBottom = scrollHeight - (scrollTop + clientHeight)
+    
+    // Consider "at bottom" if within 100px threshold
+    shouldAutoScrollRef.current = distanceFromBottom < 100
+  }, [])
+
+  // Auto-scroll only if user is at bottom
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    if (shouldAutoScrollRef.current && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+    }
   }, [messages])
+
+  // Scroll to bottom on initial render
+  useEffect(() => {
+    shouldAutoScrollRef.current = true
+  }, [])
 
   // Focus input on mount
   useEffect(() => {
@@ -152,7 +172,11 @@ function ChatContent() {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto">
+      <div 
+        className="flex-1 overflow-y-auto"
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+      >
         <div className="container max-w-3xl px-4 py-6">
           <div className="flex flex-col gap-6">
             {messages.map((message) => (

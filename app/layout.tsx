@@ -12,6 +12,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { Analytics } from "@vercel/analytics/react"
 import { GoogleAnalytics } from "@/components/google-analytics"
 import { FloatingChatBubble } from "@/components/floating-chat-bubble"
+import { LayoutContent } from "@/components/layout-content"
 
 export const metadata: Metadata = {
   title: {
@@ -49,9 +50,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         >
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <div className="relative flex h-screen flex-col">
-              <SiteHeader />
-              <div className="flex min-h-0 flex-1 overflow-y-auto">{children}</div>
-              <Footer />
+              <LayoutContent>{children}</LayoutContent>
               <Toaster />
               <FloatingChatBubble />
             </div>
