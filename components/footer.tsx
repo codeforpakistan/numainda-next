@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils"
 export function Footer({ className }: { className?: string }) {
   const pathname = usePathname()
 
-  // Hide footer on the chat page (full-screen chat experience)
-  if (pathname === "/chat") {
+  // Hide footer on chat pages (full-screen chat experience)
+  if (pathname.includes("/chat")) {
     return null
   }
 
