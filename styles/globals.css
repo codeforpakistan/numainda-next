@@ -71,4 +71,14 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+
+  [lang="ur"] {
+    line-height: 2;
+  }
+
+  [lang="ur"] h1,
+  [lang="ur"] h2,
+  [lang="ur"] h3 {
+    line-height: 1.6;
+  }
 }

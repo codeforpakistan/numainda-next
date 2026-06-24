@@ -52,15 +52,14 @@ export function FloatingChatBubble() {
           "Hello! I am Numainda, your guide to Pakistan's constitutional and electoral information. How may I assist you today?",
       },
     ],
-    onResponse: (response) => {
-      if// Don't auto-scroll here; let the useEffect handle it
-        setIsGenerating(false)
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-      }
+    onResponse: () => {
+      setIsGenerating(false)
     },
     onError: (error) => {
       if (error) setIsGenerating(false)
     },
+  })
+
   // Track if user is at bottom of messages
   const handleScroll = useCallback(() => {
     if (!messagesContainerRef.current) return
@@ -84,12 +83,10 @@ export function FloatingChatBubble() {
     if (isOpen) {
       shouldAutoScrollRef.current = true
     }
-  }, [dRef.current?.scrollIntoView({ behavior: "smooth" })
-    }
-  }, [messages, isOpen])
+  }, [isOpen])
 
   // Hide on homepage and chat page (they have their own chat UI)
-  if (pathname === "/" || pathname === "/chat") {
+  if (pathname === "/" || pathname.includes("/chat")) {
     return null
   }
 

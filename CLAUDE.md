@@ -140,9 +140,10 @@ Technology stack:
 - `/admin/dashboard`, `/admin/upload` - Admin interfaces
 
 **Layout** (`app/layout.tsx`):
-- Theme provider (dark mode via next-themes)
-- Site header with navigation (site-header.tsx)
-- Footer, toast notifications, Vercel Analytics, Google Analytics
+- Owns the only document/app shell: `<html>`, `<body>`, theme provider, analytics, toast notifications, and floating chat bubble
+- Renders `LayoutContent`, which owns the site header, scrollable page wrapper, and footer visibility
+- Chat routes hide the footer for a full-screen chat experience
+- Locale routes under `app/[locale]/layout.tsx` are nested providers only; they must not render another `<html>`, `<body>`, header, footer, analytics, or theme provider
 
 **Navigation** (`config/site.ts`): Home, Chat, About, Proceedings, Acts, Constitution
 
@@ -372,20 +373,25 @@ These client components wrap server components to trigger GA events on mount.
 - Smooth scrolling when at bottom
 
 **Benefits**:
-- ✅ Users can read previous messages without interruption
-- ✅ Auto-scroll still works when at bottom
-- ✅ Much better mobile experience
-- ✅ No more jumping/jarring scrolls during message streaming
+- âœ… Users can read previous messages without interruption
+- âœ… Auto-scroll still works when at bottom
+- âœ… Much better mobile experience
+- âœ… No more jumping/jarring scrolls during message streaming
 
 ### 2. Duplicate Navigation Bar Fix
-**Issue**: Chat page showed duplicate elements at top and bottom - main navigation bar at top, and footer appearing at bottom below chat area, cluttering the interface.
+**Issue**: Chat pages showed duplicate page chrome: a main navigation bar at the top and another navigation/footer region lower on the page. On locale routes such as `/en/chat`, the app could feel like two pages were rendered inside one page.
 
-**Solution**: Created `LayoutContent` component to conditionally hide footer on chat pages while keeping the main navigation. The footer itself already contains only the attribution text (no duplicate nav items), but it appeared as clutter in the chat interface.
+**Root cause**: `app/[locale]/layout.tsx` was rendering a second full app shell inside the root shell, including `<html>`, `<body>`, `ThemeProvider`, `SiteHeader`, `Footer`, analytics, toast notifications, and floating chat. React also hit a hydration mismatch because Urdu line-height CSS was rendered as inline `<style>` text inside the locale provider.
+
+**Solution**: Keep the document shell in `app/layout.tsx` only. `app/[locale]/layout.tsx` now provides locale context and locale attributes only. `LayoutContent` handles the single header, scroll wrapper, and footer hiding for all chat routes, including locale routes. Urdu typography rules live in `styles/globals.css` instead of an inline style tag.
 
 **Files Modified**:
 - `app/layout.tsx` - Uses new `LayoutContent` component instead of directly rendering SiteHeader/Footer
+- `app/[locale]/layout.tsx` - Nested locale provider only; no duplicate document/app shell
 - `components/layout-content.tsx` - New component that conditionally renders navigation based on route
-- `components/footer.tsx` - Already optimized (shows only attribution: "Built with ❤️ by Code For Pakistan")
+- `components/footer.tsx` - Hides on any pathname containing `/chat`
+- `components/floating-chat-bubble.tsx` - Fixed malformed smart-scroll code and hides on localized chat routes
+- `styles/globals.css` - Contains Urdu line-height rules to avoid hydration mismatch
 
 **How it works**:
 ```typescript
@@ -395,16 +401,16 @@ return (
   <>
     <SiteHeader />  // Always shown
     <div>{children}</div>
-    {!isChatPage && <Footer />}  // Hidden only on chat pages
+    {!isChatPage && <Footer />}  // Hidden on /chat, /en/chat, /ur/chat, etc.
   </>
 )
 ```
 
 **Benefits**:
-- ✅ Clean chat interface with only top navigation
-- ✅ No unnecessary footer clutter on chat page
-- ✅ Footer attribution still shows on all other pages
-- ✅ Focused, distraction-free chat experience
+- Clean chat interface with only one top navigation
+- No duplicate footer/navigation region on localized routes
+- No nested `<html>`/`<body>` or duplicate providers
+- No inline Urdu style hydration mismatch
 
 ## External Services
 
