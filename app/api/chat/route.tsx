@@ -2,11 +2,47 @@ import { openai } from "@ai-sdk/openai"
 import { streamText } from "ai"
 
 import { findRelevantContent, findRelevantRepresentatives, detectQueryTypes } from "@/lib/ai/embedding"
+import { NextResponse } from "next/server"
+import { z } from "zod"
+import { ratelimit, getClientIp } from "@/lib/ratelimit"
 
 export const maxDuration = 30
 
+const chatRequestSchema = z.object({
+  messages: z
+    .array(
+      z
+        .object({
+          role: z.enum(["system", "user", "assistant", "data"]),
+          content: z.string(),
+        })
+        .passthrough()
+    )
+    .min(1),
+})
+
 export async function POST(req: Request) {
-  const { messages } = await req.json()
+  // Throttle by client IP. No-op when Upstash Redis env vars are unset, so
+  // local dev and preview deployments keep working without extra setup.
+  if (ratelimit) {
+    const { success } = await ratelimit.limit(getClientIp(req))
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please slow down and try again shortly." },
+        { status: 429 }
+      )
+    }
+  }
+
+  // Validate the body before use so a malformed payload returns a clean 400
+  // instead of throwing an unhandled 500 on messages[messages.length - 1].
+  let messages
+  try {
+    const body = await req.json()
+    messages = chatRequestSchema.parse(body).messages
+  } catch {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 })
+  }
 
   // Get relevant content for the last message
   const lastMessage = messages[messages.length - 1]
