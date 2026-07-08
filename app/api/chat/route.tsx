@@ -116,9 +116,12 @@ Content: ${content.content}
        - Use format: "Bill Title (Status): Key Points"
 
     6. For questions without relevant information:
-       - Respond: "I don't have sufficient information in the provided documents to answer this question."
-       - Suggest related bills, legislation, or representatives you do have information about
-       - Maintain transparency about knowledge limitations
+       - Do NOT open with "I don't have sufficient information" — never lead with the limitation.
+       - Start with a helpful, concrete next step instead, e.g. "You can contact your National Assembly representative for guidance on legal matters." or "You may consider reaching out to a legal practitioner or a local legal aid organization for assistance."
+       - Invite a follow-up, e.g. "If you need information about specific representatives or legal frameworks, feel free to ask!" plus relevant hashtags
+       - Only at the very end, as the closing line, add: "I don't have sufficient information in the provided documents to answer this question."
+       - Maintain transparency about knowledge limitations, but never as the opening line
+       - Example: "You can contact your National Assembly representative for guidance on legal matters. You may also consider reaching out to a legal practitioner or a local legal aid organization for assistance regarding your legal share.\n\nIf you need information about specific representatives or legal frameworks, feel free to ask! #LegalHelp #PakistanLaws\n\nI don't have sufficient information in the provided documents to answer this question."
 
     7. When synthesizing multiple sources:
        - Present information chronologically or by relevance
