@@ -11,11 +11,13 @@
 
 import { chromium, type Browser, type Page } from 'playwright';
 import fs from 'fs/promises';
+import { createWriteStream } from 'fs';
 import path from 'path';
 import https from 'https';
 import http from 'http';
 
 interface RepresentativeBasic {
+  source: string;
   constituency: string;
   constituencyCode: string;
   constituencyName: string;
@@ -38,8 +40,34 @@ interface RepresentativeDetailed extends RepresentativeBasic {
   profileHtml?: string;
 }
 
-const BASE_URL = 'https://na.gov.pk';
-const MEMBERS_URL = `${BASE_URL}/en/all-members.php`;
+interface AssemblySource {
+  name: string;
+  url: string;
+  defaultProvince?: string;
+}
+
+const SOURCES: AssemblySource[] = [
+  {
+    name: 'National Assembly',
+    url: 'https://na.gov.pk/en/all-members.php',
+  },
+  {
+    name: 'Sindh Assembly',
+    url: 'http://www.pas.gov.pk/index.php/members/bydistrict/en',
+    defaultProvince: 'Sindh',
+  },
+  {
+    name: 'Khyber Pakhtunkhwa Assembly',
+    url: 'http://www.pakp.gov.pk/members-directory/',
+    defaultProvince: 'Khyber Pukhtunkhwa',
+  },
+  {
+    name: 'Balochistan Assembly',
+    url: 'http://www.balochistan.gov.pk/index.php/assemblies/members',
+    defaultProvince: 'Balochistan',
+  },
+];
+
 const OUTPUT_DIR = path.join(process.cwd(), 'data', 'representatives');
 const IMAGES_DIR = path.join(OUTPUT_DIR, 'images');
 const DELAY_BETWEEN_PROFILES = 1000; // 1 second delay to be respectful
@@ -48,16 +76,25 @@ async function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function normalizeUrl(baseUrl: string, maybeRelativeUrl: string): string {
+  if (!maybeRelativeUrl) return '';
+  try {
+    return new URL(maybeRelativeUrl, baseUrl).href;
+  } catch {
+    return maybeRelativeUrl;
+  }
+}
+
 /**
  * Download image from URL and save locally
  */
-async function downloadImage(imageUrl: string, fileName: string): Promise<string | null> {
+async function downloadImage(imageUrl: string, fileName: string, sourceUrl: string): Promise<string | null> {
   if (!imageUrl || imageUrl.includes('avatar-male.png') || imageUrl.includes('nophoto')) {
     return null; // Skip default/no photo images
   }
 
   try {
-    const fullUrl = imageUrl.startsWith('http') ? imageUrl : `${BASE_URL}${imageUrl}`;
+    const fullUrl = normalizeUrl(sourceUrl, imageUrl);
     const outputPath = path.join(IMAGES_DIR, fileName);
 
     // Create images directory if it doesn't exist
@@ -73,7 +110,7 @@ async function downloadImage(imageUrl: string, fileName: string): Promise<string
           return;
         }
 
-        const fileStream = require('fs').createWriteStream(outputPath);
+        const fileStream = createWriteStream(outputPath);
         response.pipe(fileStream);
 
         fileStream.on('finish', () => {
@@ -144,13 +181,22 @@ function extractProvince(text: string): string | undefined {
  * Scrape the main members listing page
  */
 async function scrapeMainListing(page: Page): Promise<RepresentativeBasic[]> {
-  console.log('📄 Navigating to members page...');
-  await page.goto(MEMBERS_URL, { waitUntil: 'networkidle' });
+  throw new Error('Deprecated signature. Use scrapeMainListingForSource(page, source).');
+}
 
-  console.log('🔍 Extracting member data from listing...');
+async function scrapeMainListingForSource(
+  page: Page,
+  source: AssemblySource
+): Promise<RepresentativeBasic[]> {
+  console.log(`📄 Navigating to ${source.name} page...`);
+  await page.goto(source.url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await delay(1000);
+
+  console.log(`🔍 Extracting member data from ${source.name} listing...`);
 
   const members = await page.evaluate(() => {
-    const rows = Array.from(document.querySelectorAll('table tbody tr'));
+    const tableRows = Array.from(document.querySelectorAll('table tbody tr'));
+    const rows = tableRows.length > 0 ? tableRows : Array.from(document.querySelectorAll('table tr'));
     const results: any[] = [];
     let currentProvince = '';
 
@@ -164,8 +210,8 @@ async function scrapeMainListing(page: Page): Promise<RepresentativeBasic[]> {
         return;
       }
 
-      // Skip rows without enough cells
-      if (cells.length < 5) return;
+      // Skip rows without enough cells to extract meaningful data
+      if (cells.length < 2) return;
 
       // Extract data
       const constituency = cells[0]?.textContent?.trim() || '';
@@ -175,9 +221,8 @@ async function scrapeMainListing(page: Page): Promise<RepresentativeBasic[]> {
       const party = cells[2]?.textContent?.trim() || '';
       const address = cells[3]?.textContent?.trim() || '';
       const phone = cells[4]?.textContent?.trim() || '';
-      const profileCell = cells[5];
-      const profileLink = profileCell?.querySelector('a')?.href || '';
-      const imageUrl = profileCell?.querySelector('img')?.src || '';
+      const profileLink = row.querySelector('a')?.getAttribute('href') || '';
+      const imageUrl = row.querySelector('img')?.getAttribute('src') || '';
 
       // Skip empty rows
       if (!name || !constituency) return;
@@ -204,13 +249,14 @@ async function scrapeMainListing(page: Page): Promise<RepresentativeBasic[]> {
     return results;
   });
 
-  console.log(`✅ Extracted ${members.length} members from listing`);
+  console.log(`✅ Extracted ${members.length} members from ${source.name}`);
 
   // Parse and clean data
   const cleanedMembers: RepresentativeBasic[] = members.map((member: any) => {
     const { code, name: constName, district } = parseConstituency(member.constituency);
 
     return {
+      source: source.name,
       constituency: member.constituency,
       constituencyCode: code,
       constituencyName: constName,
@@ -220,14 +266,62 @@ async function scrapeMainListing(page: Page): Promise<RepresentativeBasic[]> {
       permanentAddress: member.permanentAddress,
       islamabadAddress: member.islamabadAddress,
       phone: member.phone,
-      profileUrl: member.profileUrl,
-      imageUrl: member.imageUrl,
-      province: member.province,
+      profileUrl: normalizeUrl(source.url, member.profileUrl),
+      imageUrl: normalizeUrl(source.url, member.imageUrl),
+      province: member.province || source.defaultProvince,
       district: district,
     };
   });
 
   return cleanedMembers;
+}
+
+async function scrapeSource(source: AssemblySource): Promise<RepresentativeDetailed[]> {
+  console.log(`\n🏛️  Starting source: ${source.name}`);
+
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+  });
+  const page = await context.newPage();
+
+  try {
+    const basicMembers = await scrapeMainListingForSource(page, source);
+    const detailedMembers: RepresentativeDetailed[] = [];
+
+    for (let i = 0; i < basicMembers.length; i++) {
+      const member = basicMembers[i];
+      const progress = `[${source.name}] [${i + 1}/${basicMembers.length}]`;
+
+      console.log(`${progress} Scraping profile: ${member.nameClean} (${member.constituencyCode})`);
+
+      let profileDetails: Partial<RepresentativeDetailed> = {};
+      if (member.profileUrl) {
+        profileDetails = await scrapeProfilePage(page, member.profileUrl);
+      }
+
+      let imageLocalPath: string | null = null;
+      if (member.imageUrl) {
+        const imageFileName = `${member.source}-${member.constituencyCode.replace('/', '-')}-${member.nameClean.replace(/\s+/g, '-')}.jpg`;
+        imageLocalPath = await downloadImage(member.imageUrl, imageFileName, source.url);
+      }
+
+      detailedMembers.push({
+        ...member,
+        ...profileDetails,
+        imageLocalPath: imageLocalPath || undefined,
+      });
+
+      if (i < basicMembers.length - 1) {
+        await delay(DELAY_BETWEEN_PROFILES);
+      }
+    }
+
+    return detailedMembers;
+  } finally {
+    await browser.close();
+    console.log(`🌐 Browser closed for ${source.name}`);
+  }
 }
 
 /**
@@ -273,21 +367,46 @@ async function scrapeProfilePage(page: Page, profileUrl: string): Promise<Partia
  * Main scraper function
  */
 async function scrapeRepresentatives() {
-  console.log('🚀 Starting National Assembly Representatives Scraper\n');
-
-  let browser: Browser | null = null;
+  console.log('🚀 Starting Multi-Assembly Representatives Scraper\n');
 
   try {
-    // Launch browser
-    console.log('🌐 Launching browser...');
-    browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext({
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-    });
-    const page = await context.newPage();
+    // Step 1: Scrape all configured sources concurrently
+    console.log(`📡 Scraping ${SOURCES.length} sources concurrently...`);
+    const sourceResults = await Promise.allSettled(SOURCES.map((source) => scrapeSource(source)));
 
-    // Step 1: Scrape main listing
-    const basicMembers = await scrapeMainListing(page);
+    const detailedMembers: RepresentativeDetailed[] = sourceResults.flatMap((result) =>
+      result.status === 'fulfilled' ? result.value : []
+    );
+
+    const failedSources = sourceResults
+      .map((result, idx) => ({ result, source: SOURCES[idx].name }))
+      .filter(({ result }) => result.status === 'rejected');
+
+    if (failedSources.length > 0) {
+      console.log('\n⚠️  Some sources failed:');
+      failedSources.forEach(({ source, result }) => {
+        console.log(`  - ${source}: ${(result as PromiseRejectedResult).reason}`);
+      });
+    }
+
+    // Flatten basic records from detailed output to keep compatibility with existing workflow.
+    const basicMembers: RepresentativeBasic[] = detailedMembers.map((member) => ({
+      source: member.source,
+      constituency: member.constituency,
+      constituencyCode: member.constituencyCode,
+      constituencyName: member.constituencyName,
+      name: member.name,
+      nameClean: member.nameClean,
+      party: member.party,
+      permanentAddress: member.permanentAddress,
+      islamabadAddress: member.islamabadAddress,
+      phone: member.phone,
+      profileUrl: member.profileUrl,
+      imageUrl: member.imageUrl,
+      imageLocalPath: member.imageLocalPath,
+      province: member.province,
+      district: member.district,
+    }));
 
     // Save basic data
     await fs.mkdir(OUTPUT_DIR, { recursive: true });
@@ -297,61 +416,7 @@ async function scrapeRepresentatives() {
     );
     console.log(`💾 Saved basic data to representatives-basic.json\n`);
 
-    // Step 2: Scrape individual profiles
-    console.log(`📋 Scraping ${basicMembers.length} individual profiles...`);
-    console.log(`⏱️  Estimated time: ~${Math.ceil(basicMembers.length * DELAY_BETWEEN_PROFILES / 60000)} minutes\n`);
-
-    const detailedMembers: RepresentativeDetailed[] = [];
-
-    for (let i = 0; i < basicMembers.length; i++) {
-      const member = basicMembers[i];
-      const progress = `[${i + 1}/${basicMembers.length}]`;
-
-      console.log(`${progress} Scraping profile: ${member.nameClean} (${member.constituencyCode})`);
-
-      if (!member.profileUrl) {
-        console.log(`  ⚠️  No profile URL, skipping`);
-        detailedMembers.push(member as RepresentativeDetailed);
-        continue;
-      }
-
-      try {
-        const profileDetails = await scrapeProfilePage(page, member.profileUrl);
-
-        // Download profile image
-        let imageLocalPath: string | null = null;
-        if (member.imageUrl) {
-          const imageFileName = `${member.constituencyCode.replace('/', '-')}-${member.nameClean.replace(/\s+/g, '-')}.jpg`;
-          console.log(`  📷 Downloading image: ${imageFileName}`);
-          imageLocalPath = await downloadImage(member.imageUrl, imageFileName);
-        }
-
-        detailedMembers.push({
-          ...member,
-          ...profileDetails,
-          imageLocalPath: imageLocalPath || undefined,
-        });
-
-        console.log(`  ✅ Scraped successfully${imageLocalPath ? ' (with image)' : ''}`);
-      } catch (error) {
-        console.log(`  ❌ Error: ${error}`);
-        detailedMembers.push(member as RepresentativeDetailed);
-      }
-
-      // Respectful delay between requests
-      if (i < basicMembers.length - 1) {
-        await delay(DELAY_BETWEEN_PROFILES);
-      }
-
-      // Save progress every 50 members
-      if ((i + 1) % 50 === 0) {
-        await fs.writeFile(
-          path.join(OUTPUT_DIR, `representatives-detailed-progress-${i + 1}.json`),
-          JSON.stringify(detailedMembers, null, 2)
-        );
-        console.log(`\n💾 Progress saved (${i + 1}/${basicMembers.length})\n`);
-      }
-    }
+    console.log(`📋 Total scraped records across sources: ${detailedMembers.length}`);
 
     // Save final detailed data
     await fs.writeFile(
@@ -402,11 +467,6 @@ async function scrapeRepresentatives() {
   } catch (error) {
     console.error('\n❌ Fatal error:', error);
     throw error;
-  } finally {
-    if (browser) {
-      await browser.close();
-      console.log('\n🌐 Browser closed');
-    }
   }
 }
 

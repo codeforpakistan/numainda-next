@@ -542,3 +542,4 @@ For questions or issues:
 - **AWS S3**: Document storage
 - **Upstash QStash**: Background job queue
 - **Vercel**: Hosting and analytics
+# Ecommerce
