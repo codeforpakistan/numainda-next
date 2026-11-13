@@ -39,8 +39,11 @@ describe('PehchanLoginButton', () => {
       }
     })
 
-    // Mock crypto.randomUUID
-    jest.spyOn(crypto, 'randomUUID').mockImplementation(() => mockUUID)
+    // jsdom does not implement randomUUID. Define it before the button runs.
+    Object.defineProperty(crypto, 'randomUUID', {
+      configurable: true,
+      value: () => mockUUID,
+    })
   })
 
   afterEach(() => {

@@ -6,12 +6,13 @@ import ReactMarkdown from 'react-markdown'
 import { BillViewTracker } from '@/components/bill-view-tracker'
 import { getTranslations } from 'next-intl/server';
 
-export default async function BillPage({ params }: { params: { id: string } }) {
+export default async function BillPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const t = await getTranslations('Bills');
   const [bill] = await db
     .select()
     .from(bills)
-    .where(eq(bills.id, params.id));
+    .where(eq(bills.id, id));
 
   if (!bill) {
     notFound();

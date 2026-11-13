@@ -9,10 +9,11 @@ import { ProceedingViewTracker } from '@/components/proceeding-view-tracker'
 import { getTranslations } from 'next-intl/server'
 
 export default async function ProceedingPage({
-  params: { id }
+  params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  const { id } = await params
   const t = await getTranslations('Proceedings');
   const proceeding = await getProceeding(id)
 
