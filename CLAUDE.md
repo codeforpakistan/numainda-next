@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Numainda is an AI-powered constitutional guide for Pakistan, making legal knowledge accessible through natural language conversations. Built with Next.js 13 App Router, it uses RAG (Retrieval-Augmented Generation) to provide accurate information about Pakistan's constitution, election laws, and parliamentary proceedings.
+Numainda is an AI-powered constitutional guide for Pakistan, making legal knowledge accessible through natural language conversations. Built with Next.js 16 App Router, it uses RAG (Retrieval-Augmented Generation) to provide accurate information about Pakistan's constitution, election laws, and parliamentary proceedings.
 
 ## Common Development Commands
 
@@ -127,7 +127,7 @@ Technology stack:
 
 **Rate limiting**: Batched embedding generation (5 chunks, 1s delay) to respect OpenAI limits.
 
-### App Structure (Next.js 13 App Router)
+### App Structure (Next.js App Router)
 
 **Main pages** (`app/`):
 - `/` - Landing page with hero and feature cards

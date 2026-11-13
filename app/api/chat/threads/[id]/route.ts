@@ -5,8 +5,9 @@ import { NextResponse } from 'next/server'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const { searchParams } = new URL(request.url)
   const pehchanId = searchParams.get('pehchan_id')
 
@@ -20,7 +21,7 @@ export async function GET(
       .from(chatThreads)
       .where(
         and(
-          eq(chatThreads.id, parseInt(params.id)),
+          eq(chatThreads.id, parseInt(id)),
           eq(chatThreads.pehchanId, pehchanId)
         )
       )
@@ -33,8 +34,9 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const { messages, title, pehchanId } = await request.json()
 
   if (!pehchanId) {
@@ -51,7 +53,7 @@ export async function PATCH(
       })
       .where(
         and(
-          eq(chatThreads.id, parseInt(params.id)),
+          eq(chatThreads.id, parseInt(id)),
           eq(chatThreads.pehchanId, pehchanId)
         )
       )
@@ -65,8 +67,9 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const { pehchanId } = await request.json()
 
   if (!pehchanId) {
@@ -78,7 +81,7 @@ export async function DELETE(
       .delete(chatThreads)
       .where(
         and(
-          eq(chatThreads.id, parseInt(params.id)),
+          eq(chatThreads.id, parseInt(id)),
           eq(chatThreads.pehchanId, pehchanId)
         )
       )

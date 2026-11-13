@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, MapPin, Phone, Home, Building2, Calendar, Users, Loader2 } from 'lucide-react'
@@ -38,8 +38,9 @@ interface Representative {
 export default function RepresentativeDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  const { id } = use(params)
   const router = useRouter()
   const [representative, setRepresentative] = useState<Representative | null>(null)
   const [loading, setLoading] = useState(true)
@@ -48,7 +49,7 @@ export default function RepresentativeDetailPage({
   useEffect(() => {
     const fetchRepresentative = async () => {
       try {
-        const response = await fetch(`/api/representatives/${params.id}`)
+        const response = await fetch(`/api/representatives/${id}`)
 
         if (!response.ok) {
           setError(true)
@@ -66,7 +67,7 @@ export default function RepresentativeDetailPage({
     }
 
     fetchRepresentative()
-  }, [params.id])
+  }, [id])
 
   if (loading) {
     return (

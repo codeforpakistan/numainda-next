@@ -5,13 +5,20 @@ import { Icons } from "@/components/icons"
 
 export function PehchanLoginButton() {
   const handleLogin = () => {
+    const pehchanUrl = process.env.NEXT_PUBLIC_PEHCHAN_URL
+    const clientId = process.env.NEXT_PUBLIC_CLIENT_ID
+    if (!pehchanUrl || !clientId) {
+      console.error('Pehchan login is not configured')
+      return
+    }
+
     // Construct the login URL with required parameters
-    const loginUrl = new URL(`${process.env.NEXT_PUBLIC_PEHCHAN_URL}/login`)
+    const loginUrl = new URL(`${pehchanUrl}/login`)
     
     // Add required parameters
     const params = {
       service_name: 'Numainda',
-      client_id: process.env.NEXT_PUBLIC_CLIENT_ID!,
+      client_id: clientId,
       redirect_uri: `${window.location.origin}/auth/callback`,
       response_type: 'code',
       scope: 'openid profile email',

@@ -8,10 +8,11 @@ import { fontUrdu } from "@/lib/fonts"
 import { cn } from "@/lib/utils"
 
 export async function generateMetadata({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string }
+  params: Promise<{ locale: string }>
 }): Promise<Metadata> {
+  const { locale } = await params
   const t = await getTranslations({ locale, namespace: "Metadata" })
 
   return {
@@ -20,10 +21,6 @@ export async function generateMetadata({
       template: `%s - ${t("title")}`,
     },
     description: t("description"),
-    themeColor: [
-      { media: "(prefers-color-scheme: light)", color: "white" },
-      { media: "(prefers-color-scheme: dark)", color: "black" },
-    ],
     icons: {
       icon: "/favicon.ico",
       shortcut: "/favicon-16x16.png",
@@ -36,19 +33,17 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
 }
 
-// Opt out of static generation for locale routes. next-intl 3.x requires
-// `unstable_setRequestLocale` in every statically-rendered file, and without
-// it the SSG worker crashes (chunks/5525 dump). Dynamic rendering is fine
-// here because every page under this layout already fetches data
-// per-request.
+// Pages under this layout read request data. Keep the segment dynamic so
+// locale negotiation does not depend on static rendering setup.
 export const dynamic = 'force-dynamic'
 
 interface LocaleLayoutProps {
   children: React.ReactNode
-  params: { locale: string }
+  params: Promise<{ locale: string }>
 }
 
-export default async function LocaleLayout({ children, params: { locale } }: LocaleLayoutProps) {
+export default async function LocaleLayout({ children, params }: LocaleLayoutProps) {
+  const { locale } = await params
   if (!routing.locales.includes(locale as Locale)) {
     notFound()
   }

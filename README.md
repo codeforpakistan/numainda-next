@@ -4,7 +4,7 @@ Your Digital Gateway to Pakistan's Constitution and Legislative Knowledge - an A
 
 ## Overview
 
-Numainda is an interactive platform that helps citizens learn about Pakistan's constitution and rights through natural conversations in simple language. Built with Next.js 13 and powered by RAG (Retrieval-Augmented Generation), it provides accurate information about Pakistan's constitution, election laws, and parliamentary proceedings.
+Numainda is an interactive platform that helps citizens learn about Pakistan's constitution and rights through natural conversations in simple language. Built with Next.js 16 and powered by RAG (Retrieval-Augmented Generation), it provides accurate information about Pakistan's constitution, election laws, and parliamentary proceedings.
 
 ## Key Features
 
@@ -31,7 +31,7 @@ Numainda is an interactive platform that helps citizens learn about Pakistan's c
 ## Technology Stack
 
 ### Frontend
-- Next.js 13 (App Router)
+- Next.js 16 (App Router)
 - TypeScript
 - Tailwind CSS
 - Shadcn UI + Radix UI Components
@@ -54,7 +54,7 @@ Numainda is an interactive platform that helps citizens learn about Pakistan's c
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 26 and npm
 - PostgreSQL 14+ with pgvector extension
 - OpenAI API key
 - AWS account (for S3)
@@ -401,7 +401,7 @@ npm run start
 ```
 
 Requirements:
-- Node.js 18+ runtime
+- Node.js 26 runtime
 - PostgreSQL 14+ with pgvector
 - All environment variables configured
 - Reverse proxy (nginx/Apache) recommended
@@ -463,7 +463,7 @@ Pehchan tokens expire. Users need to re-login. Consider implementing token refre
 
 ```
 numainda-next/
-├── app/                          # Next.js 13 App Router
+├── app/                          # Next.js App Router
 │   ├── api/                      # API routes
 │   │   ├── chat/                 # Chat & thread management
 │   │   ├── admin/                # Admin APIs (uploads, processing)

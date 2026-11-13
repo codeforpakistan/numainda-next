@@ -8,10 +8,11 @@ import { ArrowLeft } from 'lucide-react'
 import { ProceedingViewTracker } from '@/components/proceeding-view-tracker'
 
 export default async function ProceedingPage({
-  params: { id }
+  params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  const { id } = await params
   const proceeding = await getProceeding(id)
   
   if (!proceeding) {

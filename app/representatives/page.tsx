@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, MapPin, Loader2, Filter, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -47,7 +47,7 @@ interface FilterOptions {
   assemblies?: AssemblyCount[]
 }
 
-export default function RepresentativesPage() {
+function RepresentativesPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
@@ -473,5 +473,19 @@ export default function RepresentativesPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function RepresentativesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container py-8">
+          <Skeleton className="h-10 w-full max-w-xl" />
+        </div>
+      }
+    >
+      <RepresentativesPageContent />
+    </Suspense>
   )
 }
