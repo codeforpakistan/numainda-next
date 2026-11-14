@@ -1,0 +1,79 @@
+# Local data plane for the existing Numainda corpus.
+# The Postgres password is a local development default. It is not a secret
+# and it is not the hosted database password. Production stays on Vercel.
+
+services:
+  postgres:
+    image: pgvector/pgvector:0.7.4-pg15@sha256:6688455f2364eb4fb6eed2b80c4b9fd3f6f1a90013041c2b7991c30d131e01fc
+    environment:
+      POSTGRES_USER: numainda
+      POSTGRES_PASSWORD: numainda
+      POSTGRES_DB: numainda
+    ports:
+      - "5432:5432"
+    volumes:
+      - numainda-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U numainda -d numainda"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://numainda:numainda@postgres:5432/numainda
+      NODE_ENV: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  snapshot:
+    image: pgvector/pgvector:0.7.4-pg15@sha256:6688455f2364eb4fb6eed2b80c4b9fd3f6f1a90013041c2b7991c30d131e01fc
+    profiles: ["snapshot"]
+    environment:
+      SOURCE_DATABASE_URL: ${SOURCE_DATABASE_URL:-}
+      CORPUS_DIR: /corpus
+      MIGRATIONS_DIR: /migrations
+    volumes:
+      - ./var/corpus:/corpus
+      - ./scripts:/scripts:ro
+      - ./lib/db/migrations:/migrations:ro
+    entrypoint: ["bash", "/scripts/corpus-snapshot.sh"]
+
+  restore:
+    image: pgvector/pgvector:0.7.4-pg15@sha256:6688455f2364eb4fb6eed2b80c4b9fd3f6f1a90013041c2b7991c30d131e01fc
+    profiles: ["restore"]
+    environment:
+      LOCAL_DATABASE_URL: postgres://numainda:numainda@postgres:5432/numainda
+      CORPUS_DIR: /corpus
+      MIGRATIONS_DIR: /migrations
+    volumes:
+      - ./var/corpus:/corpus
+      - ./scripts:/scripts:ro
+      - ./lib/db/migrations:/migrations:ro
+    depends_on:
+      - postgres
+    entrypoint: ["bash", "/scripts/corpus-restore.sh"]
+
+  verify:
+    image: pgvector/pgvector:0.7.4-pg15@sha256:6688455f2364eb4fb6eed2b80c4b9fd3f6f1a90013041c2b7991c30d131e01fc
+    profiles: ["verify"]
+    environment:
+      LOCAL_DATABASE_URL: postgres://numainda:numainda@postgres:5432/numainda
+      CORPUS_DIR: /corpus
+      MIGRATIONS_DIR: /migrations
+    volumes:
+      - ./var/corpus:/corpus:ro
+      - ./scripts:/scripts:ro
+      - ./lib/db/migrations:/migrations:ro
+    depends_on:
+      - postgres
+    entrypoint: ["bash", "/scripts/corpus-verify.sh"]
+
+volumes:
+  numainda-pgdata:
