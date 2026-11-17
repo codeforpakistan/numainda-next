@@ -22,12 +22,7 @@ if [[ ! -f "$dump" ]]; then
   exit 1
 fi
 
-for _ in $(seq 1 30); do
-  if psql "$url" --no-psqlrc -v ON_ERROR_STOP=1 -At -q -c 'SELECT 1' >/dev/null 2>&1; then
-    break
-  fi
-  sleep 1
-done
+corpus_wait_for_db "$url"
 
 existing=$(psql "$url" --no-psqlrc -v ON_ERROR_STOP=1 -At -q -c \
   "SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'public' AND c.relkind = 'r'")
