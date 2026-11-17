@@ -16,6 +16,8 @@ build
 # misc
 .DS_Store
 *.pem
+# Public intermediate for na.gov.pk. It is not a private key.
+!services/sync/certs/gogetssl-rsa-dv-ssl-ca-2.pem
 
 # debug
 npm-debug.log*

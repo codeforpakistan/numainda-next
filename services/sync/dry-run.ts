@@ -1,3 +1,4 @@
+import { fetchText } from "./na-tls"
 import {
   BULLETIN_PAGE_URL,
   ORDERS_PAGE_URL,
@@ -25,23 +26,6 @@ function argValue(args: string[], name: string): string | null {
   return value
 }
 
-async function fetchPage(url: string): Promise<string> {
-  const response = await fetch(url, {
-    headers: { "user-agent": "numainda-sync" },
-    redirect: "follow",
-  })
-  if (!response.ok) {
-    throw new Error(`GET ${url} returned ${response.status}`)
-  }
-  const type = response.headers.get("content-type") ?? ""
-  if (type.includes("application/pdf")) {
-    throw new Error(
-      `GET ${url} returned a PDF. This command reads listing HTML only.`
-    )
-  }
-  return response.text()
-}
-
 async function main(): Promise<void> {
   const args = process.argv.slice(2)
   if (args.includes("--help") || args.includes("-h") || args.length === 0) {
@@ -52,7 +36,8 @@ async function main(): Promise<void> {
         "  tsx services/sync/dry-run.ts --orders <file> --bulletins <file>",
         "  tsx services/sync/dry-run.ts --fetch",
         "",
-        "Fetch uses the system trust store. It does not download PDFs.",
+        "Fetch trusts the system roots plus the pinned GoGetSSL intermediate.",
+        "It does not disable TLS verification and it does not download PDFs.",
       ].join("\n")
     )
     if (args.length === 0) process.exitCode = 1
@@ -61,8 +46,8 @@ async function main(): Promise<void> {
 
   const join = args.includes("--fetch")
     ? reportFromHtml(
-        await fetchPage(ORDERS_PAGE_URL),
-        await fetchPage(BULLETIN_PAGE_URL)
+        await fetchText(ORDERS_PAGE_URL),
+        await fetchText(BULLETIN_PAGE_URL)
       )
     : reportFromFiles(
         argValue(args, "--orders") ?? missing("--orders"),

@@ -141,7 +141,7 @@ docker compose up -d web
 
 Run `npm run corpus:verify` before `npm run db:migrate`. Verify compares the volume with the snapshot, so a later migration changes the checksums and is no longer that check. After `docker compose restart postgres`, and before migrating, `GET /api/bills` should return `pagination.totalCount` equal to the `public.bills` count printed by verify.
 
-The listing dry run prints orders and bulletins joined on the date in the link text. It reads the two listing pages and does not download a PDF or write the database. A link with no year stays undated.
+The listing dry run prints orders and bulletins joined on the date in the link text. It reads the two listing pages and does not download a PDF or write the database. A link with no year stays undated. `--fetch` keeps TLS verification on and adds the pinned GoGetSSL intermediate, because the site does not send it. The intermediate is signed by Sectigo Public Server Authentication Root R46.
 
 ```bash
 npm run sync:dry-run -- --orders orders.html --bulletins bulletins.html
