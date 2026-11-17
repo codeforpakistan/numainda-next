@@ -25,6 +25,8 @@ if [[ ! -f "$manifest" ]]; then
   exit 1
 fi
 
+corpus_wait_for_db "$url"
+
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
