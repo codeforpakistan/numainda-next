@@ -75,5 +75,12 @@ services:
       - postgres
     entrypoint: ["bash", "/scripts/corpus-verify.sh"]
 
+  sync:
+    profiles: ["sync"]
+    build:
+      context: .
+    entrypoint: ["npx", "tsx", "services/sync/dry-run.ts", "--fetch"]
+    restart: "no"
+
 volumes:
   numainda-pgdata:

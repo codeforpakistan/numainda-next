@@ -141,6 +141,13 @@ docker compose up -d web
 
 Run `npm run corpus:verify` before `npm run db:migrate`. Verify compares the volume with the snapshot, so a later migration changes the checksums and is no longer that check. After `docker compose restart postgres`, and before migrating, `GET /api/bills` should return `pagination.totalCount` equal to the `public.bills` count printed by verify.
 
+The listing dry run prints orders and bulletins joined on the date in the link text. It reads the two listing pages and does not download a PDF or write the database. A link with no year stays undated.
+
+```bash
+npm run sync:dry-run -- --orders orders.html --bulletins bulletins.html
+docker compose --profile sync run --rm sync
+```
+
 ### Development
 
 ```bash
