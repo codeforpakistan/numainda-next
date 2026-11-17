@@ -1,0 +1,9 @@
+{
+  "name": "@numainda/source",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Source-page parsers for the Numainda legislative ledger",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "sideEffects": false
+}
