@@ -25,6 +25,7 @@
     "corpus:snapshot": "docker compose run --rm snapshot",
     "corpus:restore": "docker compose run --rm restore",
     "corpus:verify": "docker compose run --rm verify",
+    "sync:dry-run": "tsx services/sync/dry-run.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "ingest": "tsx scripts/ingest-pdf.ts",
