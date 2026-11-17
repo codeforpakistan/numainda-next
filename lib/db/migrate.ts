@@ -9,21 +9,22 @@ const runMigrate = async () => {
     throw new Error("DATABASE_URL is not defined")
   }
 
-  const connection = postgres(env.DATABASE_URL, { max: 1 })
-
-  const db = drizzle(connection)
-
   const hostname = new URL(env.DATABASE_URL).hostname
   const local =
     hostname === "localhost" ||
     hostname === "127.0.0.1" ||
     hostname === "postgres"
-  console.log(`⏳ Running migrations against ${hostname}`)
-  if (!local) {
-    console.log(
-      "This host is not the local compose database. Stop if that is not the database you mean to change."
+  if (!local && process.env.NUMAINDA_MIGRATE_REMOTE !== "1") {
+    throw new Error(
+      `Refusing to migrate ${hostname}. Set NUMAINDA_MIGRATE_REMOTE=1 to migrate a database that is not the local compose service.`
     )
   }
+
+  const connection = postgres(env.DATABASE_URL, { max: 1 })
+
+  const db = drizzle(connection)
+
+  console.log(`⏳ Running migrations against ${hostname}`)
 
   const start = Date.now()
 
