@@ -6,6 +6,7 @@ import * as bills from './schema/bills';
 import * as chatThreads from './schema/chat-threads';
 import * as representatives from './schema/representatives';
 import * as representativeEmbeddings from './schema/representative-embeddings';
+import * as ledger from './schema/ledger';
 import { env } from "@/lib/env.mjs";
 
 const client = postgres(env.DATABASE_URL);
@@ -17,6 +18,7 @@ export const db = drizzle(client, {
     ...chatThreads,
     ...representatives,
     ...representativeEmbeddings,
+    ...ledger,
   },
 });
 

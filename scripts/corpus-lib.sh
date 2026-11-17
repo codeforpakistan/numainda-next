@@ -85,6 +85,7 @@ corpus_migration_files() {
 # Pair file lines (file, tag, when, sha256) with drizzle lines (drizzle, sha256, created_at).
 # Drizzle applies the next migration by comparing journal time with the latest
 # created_at. It does not compare hashes, so both have to match before migrate.
+# A journal file newer than every stored row is pending. It does not fail the snapshot.
 corpus_pair_migrations() {
   local manifest="$1"
   awk -F '\t' '
@@ -120,11 +121,20 @@ corpus_pair_migrations() {
           bad = 1
         }
       }
+      max_at = 0
+      for (i = 1; i <= dn; i++) {
+        created = drizzle_at[drizzle_sha[i]] + 0
+        if (created > max_at) max_at = created
+      }
       for (i = 1; i <= fn; i++) {
         tag = file_tag[i]
         sha = file_sha[tag]
         when = file_when[tag]
         if (!(sha in drizzle_at)) {
+          if ((when + 0) > max_at) {
+            print "pending " tag " is newer than this snapshot and is not applied" > "/dev/stderr"
+            continue
+          }
           print "no drizzle row for " tag " sha256 " sha > "/dev/stderr"
           bad = 1
           continue
