@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs"
 import path from "node:path"
 
-import { parseNaListings } from "../na-listings"
+import { parseListedOn, parseNaListings } from "../na-listings"
 
 const ORDERS_URL = "https://na.gov.pk/en/ordersoftheday.php"
 const BULLETIN_URL = "https://na.gov.pk/en/bulletin.php"
@@ -12,6 +12,7 @@ function fixture(name: string): string {
 
 const ordersHtml = fixture("orders.html")
 const bulletinHtml = fixture("bulletin.html")
+const accordionHtml = fixture("orders-accordion.html")
 
 describe("parseNaListings on an Orders of the Day page", () => {
   const records = parseNaListings(ordersHtml, ORDERS_URL)
@@ -115,8 +116,82 @@ describe("parseNaListings on a Daily Bulletin page", () => {
   })
 })
 
+describe("parseNaListings on the server-rendered accordion", () => {
+  const records = parseNaListings(accordionHtml, ORDERS_URL)
+
+  it("reads one record per PDF under each h3 session header", () => {
+    expect(records).toHaveLength(3)
+    expect(records.map((record) => record.sessionLabel)).toEqual([
+      "30th Session From 13th Oct To 30th Oct 2026",
+      "30th Session From 13th Oct To 30th Oct 2026",
+      "29th Session",
+    ])
+  })
+
+  it("applies the same URL, date, and filename rules as the tab path", () => {
+    expect(records.map((record) => record.listedOn)).toEqual([
+      "2026-10-30",
+      null,
+      "2026-08-25",
+    ])
+    expect(records.map((record) => record.filenameLabel)).toEqual([
+      "Orders of the Day, 30-10-2026.pdf",
+      "Orders of the Day (23-10-2026).pdf",
+      "ORDER-OF-THE-DAY-25-08-2026.PDF",
+    ])
+    for (const record of records) {
+      expect(record.kind).toBe("order")
+      expect(
+        record.listingUrl.startsWith("https://na.gov.pk/uploads/documents/")
+      ).toBe(true)
+      expect(record.listingUrl).not.toContain("..")
+    }
+  })
+
+  it("skips the session header link and PDFs outside #accordion", () => {
+    const filenames = records.map((record) => record.filenameLabel)
+    expect(filenames).not.toContain("Ruling-Web.pdf")
+    expect(filenames).not.toContain("OrganogramNA.pdf")
+    expect(
+      records.every(
+        (record) => record.listingUrl !== "https://na.gov.pk/en/#526"
+      )
+    ).toBe(true)
+  })
+})
+
+describe("parseListedOn", () => {
+  it("accepts the punctuation the Assembly actually publishes", () => {
+    const cases: Array<[string, string]> = [
+      ["Friday, the 23rd January, 2026", "2026-01-23"],
+      ["Monday, the 12th January , 2026", "2026-01-12"],
+      ["Monday,the 8th December,2025", "2025-12-08"],
+      ["Monday,the 28th October2024", "2024-10-28"],
+      ["Monday, the 10th Febuary,2025", "2025-02-10"],
+      ["Friday, the 21th March , 2025", "2025-03-21"],
+      ["30-10-2026", "2026-10-30"],
+    ]
+
+    for (const [text, expected] of cases) {
+      expect([text, parseListedOn(text)]).toEqual([text, expected])
+    }
+  })
+
+  it("returns null instead of guessing a missing or impossible date", () => {
+    for (const text of [
+      "Monday, the 16th December",
+      "Order of the Day",
+      "Untitled 22",
+      "31-02-2026",
+      "",
+    ]) {
+      expect([text, parseListedOn(text)]).toEqual([text, null])
+    }
+  })
+})
+
 describe("parseNaListings edge cases", () => {
-  it("returns no records when the page has no tabpanels", () => {
+  it("returns no records when the page has neither tabpanels nor an accordion", () => {
     const html = `<html><body><a href="/uploads/documents/order.pdf">Friday, the 30th October, 2026</a></body></html>`
     expect(parseNaListings(html, ORDERS_URL)).toEqual([])
   })

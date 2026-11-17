@@ -49,6 +49,8 @@ for (const [index, name] of MONTH_NAMES.entries()) {
   MONTH_NUMBERS[name.slice(0, 3)] = index + 1
 }
 MONTH_NUMBERS.sept = 9
+// The pages misspell February often enough to be worth accepting.
+MONTH_NUMBERS.febuary = 2
 
 function normalizeText(value: string | null | undefined): string {
   return (value ?? "").replace(/\s+/g, " ").trim()
@@ -76,8 +78,11 @@ function toIsoDate(year: number, month: number, day: number): string | null {
  * Reads the sitting date from link text.
  *
  * Accepted shapes include "Friday, the 23rd January, 2026" and "30-10-2026",
- * plus "Friday, 28th August, 2026", "January 23, 2026" and ISO dates. Returns
- * null rather than guessing: the caller gets a row with `listedOn: null`.
+ * plus the irregular spacing and punctuation the Assembly actually publishes:
+ * "Monday, the 12th January , 2026", "Monday,the 8th December,2025",
+ * "Monday,the 28th October2024". Text with no year ("Monday,the 16th
+ * December") returns null rather than guessing: the caller gets a row with
+ * `listedOn: null`.
  */
 export function parseListedOn(text: string | null | undefined): string | null {
   const value = normalizeText(text)
@@ -95,7 +100,7 @@ export function parseListedOn(text: string | null | undefined): string | null {
   }
 
   const dayFirst = value.match(
-    /\b(\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?([A-Za-z]{3,})\.?,?\s+(\d{4})\b/
+    /\b(\d{1,2})(?:st|nd|rd|th)?[\s,.]+(?:of\s+)?([A-Za-z]{3,})\.?[\s,.]*(\d{4})\b/
   )
   if (dayFirst) {
     const month = MONTH_NUMBERS[dayFirst[2].toLowerCase()]
@@ -103,7 +108,7 @@ export function parseListedOn(text: string | null | undefined): string | null {
   }
 
   const monthFirst = value.match(
-    /\b([A-Za-z]{3,})\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})\b/
+    /\b([A-Za-z]{3,})\.?[\s,.]*(\d{1,2})(?:st|nd|rd|th)?,?[\s,.]*(\d{4})\b/
   )
   if (monthFirst) {
     const month = MONTH_NUMBERS[monthFirst[1].toLowerCase()]
@@ -185,12 +190,79 @@ function tabTextForPanel(
   return null
 }
 
+function anchorRecords(
+  container: Element,
+  sessionLabel: string | null,
+  kind: NaListingKind,
+  pageUrl: string
+): NaListing[] {
+  const records: NaListing[] = []
+
+  for (const anchor of Array.from(container.querySelectorAll("a[href]"))) {
+    const url = resolveListingUrl(anchor.getAttribute("href") ?? "", pageUrl)
+    if (!url) continue
+
+    const filenameLabel = pdfFilename(url)
+    if (!filenameLabel) continue
+
+    records.push({
+      house: "national-assembly",
+      kind,
+      sessionLabel,
+      listedOn: parseListedOn(anchor.textContent),
+      listingUrl: url.toString(),
+      filenameLabel,
+    })
+  }
+
+  return records
+}
+
+function isElement(node: Element | null | undefined): node is Element {
+  return Boolean(node) && node!.nodeType === 1
+}
+
+/**
+ * Reads the server-rendered markup the Assembly actually serves: a
+ * `#accordion` container where each session is an `<h3>` header followed by a
+ * `<div>` of PDF links. The ARIA tab roles in the fixtures only exist after
+ * jQuery UI runs in a browser.
+ */
+function parseAccordion(
+  doc: Document,
+  kind: NaListingKind,
+  pageUrl: string
+): NaListing[] {
+  const accordion = doc.getElementById("accordion")
+  if (!accordion) return []
+
+  const records: NaListing[] = []
+
+  for (const child of Array.from(accordion.children)) {
+    if (child.tagName.toLowerCase() !== "h3") continue
+
+    const body = child.nextElementSibling
+    if (!isElement(body) || body.tagName.toLowerCase() !== "div") continue
+
+    const sessionLabel = normalizeText(child.textContent) || null
+    records.push(...anchorRecords(body, sessionLabel, kind, pageUrl))
+  }
+
+  return records
+}
+
 /**
  * Parses a National Assembly Orders of the Day or Daily Bulletin page.
  *
- * Returns one record per PDF anchor inside a `role="tabpanel"`, in document
- * order. Anchors outside a tabpanel (site footer links, navigation) and
- * anchors that do not point at a PDF are ignored.
+ * Returns one record per PDF anchor grouped under a session, in document
+ * order. Two page shapes are read: `role="tabpanel"` sections (the markup a
+ * browser sees once jQuery UI has initialized the accordion) and the
+ * `#accordion` structure the server sends, where each `<h3>` session header is
+ * followed by a `<div>` of PDF links.
+ *
+ * Anchors outside a tabpanel or outside `#accordion` (site footer, navigation)
+ * and anchors that do not point at a PDF are ignored. A session header link is
+ * not a PDF and is ignored as well.
  *
  * @param html Page HTML.
  * @param pageUrl URL the HTML came from; decides `kind` and resolves links.
@@ -212,27 +284,21 @@ export function parseNaListings(html: string, pageUrl: string): NaListing[] {
   const panels = Array.from(doc.querySelectorAll('[role="tabpanel"]'))
 
   const records: NaListing[] = []
+  const seen = new Set<string>()
 
-  for (const panel of panels) {
-    const sessionLabel = tabTextForPanel(panel, doc, tabs)
-
-    for (const anchor of Array.from(panel.querySelectorAll("a[href]"))) {
-      const url = resolveListingUrl(anchor.getAttribute("href") ?? "", pageUrl)
-      if (!url) continue
-
-      const filenameLabel = pdfFilename(url)
-      if (!filenameLabel) continue
-
-      records.push({
-        house: "national-assembly",
-        kind,
-        sessionLabel,
-        listedOn: parseListedOn(anchor.textContent),
-        listingUrl: url.toString(),
-        filenameLabel,
-      })
+  const add = (batch: NaListing[]) => {
+    for (const record of batch) {
+      if (seen.has(record.listingUrl)) continue
+      seen.add(record.listingUrl)
+      records.push(record)
     }
   }
+
+  for (const panel of panels) {
+    add(anchorRecords(panel, tabTextForPanel(panel, doc, tabs), kind, pageUrl))
+  }
+
+  add(parseAccordion(doc, kind, pageUrl))
 
   return records
 }
