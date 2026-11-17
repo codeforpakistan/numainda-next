@@ -124,6 +124,23 @@ CREATE EXTENSION IF NOT EXISTS vector;
 CREATE INDEX ON embeddings USING hnsw (embedding vector_cosine_ops);
 ```
 
+### Local corpus
+
+`docker compose up` starts Postgres 15 with pgvector 0.7.4 and this app on port 3000. The database is empty until a snapshot of the existing corpus is restored. The dump and its manifest are written to `var/corpus/` and are not committed.
+
+Put a direct Postgres URL in `.env` as `SOURCE_DATABASE_URL`. A pooler URL cannot hold the snapshot. The local database password in `docker-compose.yml` is only for this container.
+
+```bash
+docker compose up -d postgres
+npm run corpus:snapshot
+npm run corpus:restore
+docker compose up -d web
+```
+
+`corpus:restore` loads the dump into an empty volume and checks ids, text, and vectors against the manifest from that same snapshot. It also checks that `drizzle.__drizzle_migrations` matches the SHA-256 and journal time of `lib/db/migrations`. It does not apply a new migration.
+
+After `docker compose restart postgres`, run `npm run corpus:verify`. `GET /api/bills` should return `pagination.totalCount` equal to the `public.bills` count printed by that check.
+
 ### Development
 
 ```bash

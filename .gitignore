@@ -38,3 +38,6 @@ yarn-error.log*
 docs/
 data/
 .playwright-mcp/
+
+# Corpus dump and the manifest taken with it. Both stay out of git.
+var/corpus/

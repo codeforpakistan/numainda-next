@@ -1,0 +1,8 @@
+node_modules
+.next
+.git
+var
+.env
+.env.*
+coverage
+.playwright-mcp
