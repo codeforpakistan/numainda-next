@@ -137,9 +137,9 @@ npm run corpus:restore
 docker compose up -d web
 ```
 
-`corpus:restore` loads the dump into an empty volume and checks ids, text, and vectors against the manifest from that same snapshot. It also checks that `drizzle.__drizzle_migrations` matches the SHA-256 and journal time of `lib/db/migrations`. It does not apply a new migration.
+`corpus:restore` loads the dump into an empty volume and checks ids, text, and vectors against the manifest from that same snapshot. It also checks that `drizzle.__drizzle_migrations` matches the SHA-256 and journal time of the migrations in that snapshot. It does not apply a new migration. A journal entry newer than every stored migration is pending and does not fail that check.
 
-After `docker compose restart postgres`, run `npm run corpus:verify`. `GET /api/bills` should return `pagination.totalCount` equal to the `public.bills` count printed by that check.
+Run `npm run corpus:verify` before `npm run db:migrate`. Verify compares the volume with the snapshot, so a later migration changes the checksums and is no longer that check. After `docker compose restart postgres`, and before migrating, `GET /api/bills` should return `pagination.totalCount` equal to the `public.bills` count printed by verify.
 
 ### Development
 
@@ -327,6 +327,9 @@ Key tables:
 - `parliamentary-proceedings` - Daily proceedings with summaries
 - `chat-threads` - User conversation history (JSONB messages)
 - `document-uploads` - Upload tracking with async processing status
+- `source_listings` - Source links. The content hash stays empty until bytes are stored
+- `source_revisions` - Immutable bytes, one row per listing and content hash
+- `sync_runs` - Whether enumeration of one source scope finished
 
 ### RAG Pipeline
 
