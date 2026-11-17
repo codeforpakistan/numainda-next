@@ -37,7 +37,7 @@ SELECT 'drizzle' || E'\t' || hash || E'\t' || created_at::text
 FROM drizzle.__drizzle_migrations
 ORDER BY created_at, id;
 SELECT format(
-\$\$SELECT %L || E'\t' || count(*)::text || E'\t' || md5(coalesce(string_agg(md5(row_to_json(t)::text), '' ORDER BY row_to_json(t)::text), '')) FROM %I.%I AS t\$\$,
+\$\$SELECT %L || E'\t' || count(*)::text || E'\t' || md5(coalesce(string_agg(md5(row_to_json(t)::text COLLATE "C"), '' ORDER BY row_to_json(t)::text COLLATE "C"), '')) FROM %I.%I AS t\$\$,
   'table' || chr(9) || n.nspname || '.' || c.relname,
   n.nspname,
   c.relname
@@ -145,4 +145,18 @@ corpus_pair_migrations() {
       if (bad) exit 1
     }
   ' "$manifest"
+}
+
+# Wait until the local database accepts a connection. Fail if it never does.
+corpus_wait_for_db() {
+  local url="$1"
+  local _i
+  for _i in $(seq 1 30); do
+    if psql "$url" --no-psqlrc -v ON_ERROR_STOP=1 -At -q -c 'SELECT 1' >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+  echo "Could not connect to the local database." >&2
+  return 1
 }
